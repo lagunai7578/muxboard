@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF' >&2
+Usage: muxboard-agent-state --agent <name> --state <running|waiting|done|error|stuck|idle|off> [--summary <text>] [--thread-name <text>] [--progress <text>] [--log <text>] [--seen|--unseen] [--pane <pane_id>]
+EOF
+}
+
+agent=""
+state=""
+summary=""
+thread_id=""
+thread_name=""
+progress=""
+log_line=""
+seen=""
+pane_id="${TMUX_PANE:-}"
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --agent)
+            shift
+            agent="${1:-}"
+            ;;
+        --agent=*)
+            agent="${1#--agent=}"
+            ;;
+        --state)
+            shift
+            state="${1:-}"
+            ;;
+        --state=*)
+            state="${1#--state=}"
+            ;;
+        --summary)
+            shift
+            summary="${1:-}"
+            ;;
+        --summary=*)
+            summary="${1#--summary=}"
+            ;;
+        --thread-id)
+            shift
+            thread_id="${1:-}"
+            ;;
+        --thread-id=*)
+            thread_id="${1#--thread-id=}"
+            ;;
+        --thread-name)
+            shift
+            thread_name="${1:-}"
+            ;;
+        --thread-name=*)
+            thread_name="${1#--thread-name=}"
+            ;;
+        --progress)
+            shift
+            progress="${1:-}"
+            ;;
+        --progress=*)
+            progress="${1#--progress=}"
+            ;;
+        --log)
+            shift
+            log_line="${1:-}"
+            ;;
+        --log=*)
+            log_line="${1#--log=}"
+            ;;
+        --unseen)
+            seen="0"
+            ;;
+        --seen)
+            seen="1"
+            ;;
+        --pane)
+            shift
+            pane_id="${1:-}"
+            ;;
+        --pane=*)
+            pane_id="${1#--pane=}"
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+if ! command -v tmux >/dev/null 2>&1; then
+    exit 0
+fi
+
+if [ -z "$pane_id" ]; then
+    pane_id="$(tmux display-message -p '#{pane_id}' 2>/dev/null || true)"
+fi
+
+if [ -z "$pane_id" ] || [ -z "$state" ]; then
+    usage
+    exit 2
+fi
+
+normalize_state() {
+    local value
+    value="$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$value" in
+        running | run | working | thinking | tool-running | tool_running) printf "running" ;;
+        waiting | wait | needs-input | needs_input | input-required | input_required | approval | blocked | ask-user | ask_user) printf "waiting" ;;
+        done | complete | completed | finished | success | stop) printf "done" ;;
+        error | failed | failure | panic) printf "error" ;;
+        stuck | stale | interrupted | hung) printf "stuck" ;;
+        idle | quiet) printf "idle" ;;
+        off | clear | none) printf "off" ;;
+        *) return 1 ;;
+    esac
+}
+
+fragment() {
+    printf "%s" "$1" | sed 's/[^A-Za-z0-9]/_/g'
+}
+
+set_env() {
+    tmux set-environment -g "$1" "$2"
+}
+
+set_or_unset_env() {
+    if [ -n "$2" ]; then
+        set_env "$1" "$2"
+    else
+        unset_env "$1"
+    fi
+}
+
+unset_env() {
+    tmux set-environment -gu "$1" 2>/dev/null || true
+}
+
+normalized_state="$(normalize_state "$state" || true)"
+if [ -z "$normalized_state" ]; then
+    echo "muxboard: unknown agent state '$state'" >&2
+    exit 2
+fi
+
+key_prefix="MUXBOARD_AGENT_PANE_$(fragment "$pane_id")"
+
+if [ "$normalized_state" = "off" ]; then
+    unset_env "${key_prefix}_AGENT"
+    unset_env "${key_prefix}_STATE"
+    unset_env "${key_prefix}_SUMMARY"
+    unset_env "${key_prefix}_THREAD_ID"
+    unset_env "${key_prefix}_THREAD_NAME"
+    unset_env "${key_prefix}_PROGRESS"
+    unset_env "${key_prefix}_LOG"
+    unset_env "${key_prefix}_UNSEEN"
+    unset_env "${key_prefix}_UPDATED_AT"
+    tmux refresh-client -S 2>/dev/null || true
+    exit 0
+fi
+
+if [ -z "$agent" ]; then
+    agent="agent"
+fi
+
+updated_at="$(date +%s000 2>/dev/null || printf "0")"
+set_env "${key_prefix}_AGENT" "$agent"
+set_env "${key_prefix}_STATE" "$normalized_state"
+set_env "${key_prefix}_SUMMARY" "$summary"
+set_or_unset_env "${key_prefix}_THREAD_ID" "$thread_id"
+set_or_unset_env "${key_prefix}_THREAD_NAME" "$thread_name"
+set_or_unset_env "${key_prefix}_PROGRESS" "$progress"
+set_or_unset_env "${key_prefix}_LOG" "$log_line"
+case "$normalized_state" in
+    done | error | stuck)
+        if [ "$seen" = "1" ]; then
+            set_env "${key_prefix}_UNSEEN" "0"
+        else
+            set_env "${key_prefix}_UNSEEN" "1"
+        fi
+        ;;
+    *)
+        if [ "$seen" = "0" ]; then
+            set_env "${key_prefix}_UNSEEN" "1"
+        else
+            unset_env "${key_prefix}_UNSEEN"
+        fi
+        ;;
+esac
+set_env "${key_prefix}_UPDATED_AT" "$updated_at"
+tmux refresh-client -S 2>/dev/null || true

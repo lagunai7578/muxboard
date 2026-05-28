@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+goal="${GOAL:-competitive-hardening}"
+passes="${PASSES:-3}"
+autocommit="${AUTOCOMMIT:-0}"
+dogfood="${DOGFOOD:-0}"
+coverage_every="${COVERAGE_EVERY:-0}"
+allow_dirty="${ALLOW_DIRTY:-0}"
+backup_first="${BACKUP_FIRST:-1}"
+log_dir="${LOG_DIR:-target/competitive-loop}"
+
+case "$passes" in
+  ''|*[!0-9]*)
+    echo "PASSES must be a positive integer, got: $passes" >&2
+    exit 1
+    ;;
+esac
+
+case "$coverage_every" in
+  ''|*[!0-9]*)
+    echo "COVERAGE_EVERY must be 0 or a positive integer, got: $coverage_every" >&2
+    exit 1
+    ;;
+esac
+
+if [ "$passes" -lt 1 ]; then
+  echo "PASSES must be at least 1." >&2
+  exit 1
+fi
+
+mkdir -p "$log_dir"
+
+if [ "$allow_dirty" != "1" ]; then
+  status="$(git status --short)"
+  if [ -n "$status" ]; then
+    echo "Refusing to start a long loop on a dirty tree."
+    echo
+    echo "$status"
+    echo
+    echo "Commit, stash, or run with ALLOW_DIRTY=1 only for a deliberate local experiment."
+    exit 1
+  fi
+fi
+
+run_logged() {
+  local log_file="$1"
+  shift
+  {
+    printf '\n== %s ==\n' "$*"
+    "$@"
+  } 2>&1 | tee -a "$log_file"
+}
+
+if [ "$backup_first" = "1" ]; then
+  stamp="$(date +%Y%m%d-%H%M%S)"
+  log_file="$log_dir/backup-$stamp.log"
+  run_logged "$log_file" just backup
+fi
+
+for pass in $(seq 1 "$passes"); do
+  stamp="$(date +%Y%m%d-%H%M%S)"
+  log_file="$log_dir/pass-$pass-$stamp.log"
+  echo "== muxboard competitive hardening pass $pass/$passes =="
+  echo "log: $log_file"
+
+  run_logged "$log_file" just goal-run "$goal"
+  run_logged "$log_file" cargo fmt --check
+  run_logged "$log_file" cargo clippy --all-targets --all-features -- -D warnings
+  run_logged "$log_file" just ux
+  run_logged "$log_file" just ci
+
+  if [ "$dogfood" = "1" ]; then
+    run_logged "$log_file" just dogfood
+  fi
+
+  if [ "$coverage_every" -gt 0 ] && [ $((pass % coverage_every)) -eq 0 ]; then
+    run_logged "$log_file" just coverage
+  fi
+
+  run_logged "$log_file" git diff --check
+
+  status="$(git status --short)"
+  if [ -z "$status" ]; then
+    echo "Pass $pass left no diff. Continuing."
+    continue
+  fi
+
+  echo "Pass $pass produced a reviewable diff:"
+  echo "$status"
+
+  if [ "$autocommit" != "1" ]; then
+    echo
+    echo "Stopping for review. Re-run with AUTOCOMMIT=1 only when you want checkpoint commits."
+    exit 0
+  fi
+
+  git add -A
+  git commit -m "autopass: competitive hardening $pass"
+  echo "Checkpoint committed pass $pass."
+done
+
+echo "Completed $passes competitive-hardening pass(es)."

@@ -1,0 +1,18 @@
+muxboard                                                               Output  demo/agents  1-1 / 1  1 working
+
+                  ┌Output─────────────────────────────────────────────────────────────────┐
+                  │ demo / agents                                                         │
+                  │ Running | 0s ago                                                      │
+                  │                                                                       │
+                  │ Latest                                                                │
+                  │   Waiting on final check                                             ░│
+                  │   Running cargo fmt                                                  ░│
+                  │   Running just ux                                                    ░│
+                  │   Running live actions                                               ░│
+                  │   Running perf live                                                  ░│
+                  │   Running just ci                                                    █│
+                  │   Reviewing final screen                                             █│
+                  │   run check                                                          █│
+                  └───────────────────────────────────────────────────────────────────────┘
+
+? help  K older/J newer  Esc back  G show  Space add  : send  / filter  L layout  . more  Q quit

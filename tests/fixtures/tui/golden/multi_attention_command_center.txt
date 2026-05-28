@@ -1,0 +1,22 @@
+muxboard                                                               Command Center  demo/agent-0  1-8 / 8  8 need you
+
+                           ┌Command Center──────────────────────────────────────────────────┐
+                           │ Action: A continue demo / agent-0                              │
+                           │ Needs you: 8 waiting                                           │
+                           │ Target: demo / agent-0                                         │
+                           │ Start: + agent in workspace                                    │
+                           │ Queue (8)                                                      │
+                           │ > continue demo / agent-0: needs Enter                         │
+                           │   continue demo / agent-1: needs Enter                         │
+                           │   continue demo / agent-2: needs Enter                         │
+                           │   continue demo / agent-3: needs Enter                         │
+                           │   continue demo / agent-4: needs Enter                         │
+                           │   continue demo / agent-5: needs Enter                         │
+                           │ + 2 more need you: continue                                    │
+                           │                                                                │
+                           │ Lanes                                                          │
+                           │ > codex: 8 panes | 8 waiting                                   │
+                           └────────────────────────────────────────────────────────────────┘
+
+
+? help  A continue  J/K move  Esc back  G show  : send  / filter  L layout  . more  Q quit

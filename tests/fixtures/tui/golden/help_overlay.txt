@@ -1,0 +1,18 @@
+muxboard                                                                                    Help
+
+           ┌Help────────────────────────────────────────────────────────────────────┐
+           │ Now: : reply, Enter output, G show in tmux.                            │
+           │ Send: Space add/remove pane for a send list.                           │
+           │ Find: / filter, backspace show all, R refresh.                         │
+           │ Move: J/K select panes, Tab Fleet/Details.                             │
+           │ Views: . then [ browse, ] command center; L layout.                    │
+           │ More: . then + start agent, Z zoom pane.                               │
+           │ Legend: > selected, * active, + listed, ! alert, ~ muted.              │
+           │ Close: Esc backs out or closes Help, Q quit muxboard.                  │
+           └────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+Esc close  Q quit

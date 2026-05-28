@@ -1,0 +1,490 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENTRYPOINT="$(cd "$SCRIPT_DIR/../../.." && pwd)/muxboard.tmux"
+HELPER="$SCRIPT_DIR/muxboard-open"
+MARK_SEEN_HELPER="$SCRIPT_DIR/muxboard-mark-seen"
+STATE_HELPER="$SCRIPT_DIR/muxboard-agent-state"
+CODEX_NOTIFY="$SCRIPT_DIR/muxboard-codex-notify"
+STATUS_HELPER="$SCRIPT_DIR/muxboard-status"
+DOTS_HELPER="$SCRIPT_DIR/muxboard-session-dots"
+TMP_DIR="$(mktemp -d)"
+LOG_PATH="$TMP_DIR/tmux.log"
+OUTPUT_PATH="$TMP_DIR/output"
+START_DIR="$TMP_DIR/start"
+FAKE_TMUX="$TMP_DIR/tmux"
+
+cleanup() {
+    rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
+
+mkdir -p "$START_DIR"
+
+cat >"$FAKE_TMUX" <<'FAKE'
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd="${1:-}"
+if [ "$#" -gt 0 ]; then
+    shift
+fi
+
+option_name() {
+    printf "%s" "${@: -1}"
+}
+
+case "$cmd" in
+    show-option)
+        option="$(option_name "$@")"
+        case "$option" in
+            @muxboard-command) printf "%s" "${MUXBOARD_FAKE_COMMAND:-printf smoke}" ;;
+            @muxboard-key) printf "%s" "${MUXBOARD_FAKE_KEY:-}" ;;
+            @muxboard-bind) printf "%s" "${MUXBOARD_FAKE_BIND:-}" ;;
+            @muxboard-drawer-key) printf "%s" "${MUXBOARD_FAKE_DRAWER_KEY:-}" ;;
+            @muxboard-drawer-bind) printf "%s" "${MUXBOARD_FAKE_DRAWER_BIND:-}" ;;
+            @muxboard-mark-seen-on-focus) printf "%s" "${MUXBOARD_FAKE_MARK_SEEN_ON_FOCUS:-}" ;;
+            @muxboard-open-preset) printf "%s" "${MUXBOARD_FAKE_OPEN_PRESET:-}" ;;
+            @muxboard-open-mode) printf "%s" "${MUXBOARD_FAKE_OPEN_MODE:-}" ;;
+            @muxboard-popup-placement) printf "%s" "${MUXBOARD_FAKE_POPUP_PLACEMENT:-}" ;;
+            @muxboard-popup-width) printf "%s" "${MUXBOARD_FAKE_POPUP_WIDTH:-}" ;;
+            @muxboard-popup-height) printf "%s" "${MUXBOARD_FAKE_POPUP_HEIGHT:-}" ;;
+            @muxboard-close-after-jump) printf "%s" "${MUXBOARD_FAKE_CLOSE_AFTER_JUMP:-}" ;;
+            @muxboard-extra-args) printf "%s" "${MUXBOARD_FAKE_EXTRA_ARGS:-}" ;;
+            @muxboard-start-directory) printf "%s" "${MUXBOARD_FAKE_START_DIRECTORY:-}" ;;
+            @muxboard-window-name) printf "%s" "${MUXBOARD_FAKE_WINDOW_NAME:-}" ;;
+            @muxboard-reuse-window) printf "%s" "${MUXBOARD_FAKE_REUSE_WINDOW:-}" ;;
+            @muxboard-split-percent) printf "%s" "${MUXBOARD_FAKE_SPLIT_PERCENT:-}" ;;
+            @muxboard-split-direction) printf "%s" "${MUXBOARD_FAKE_SPLIT_DIRECTION:-}" ;;
+            @muxboard-dock-width) printf "%s" "${MUXBOARD_FAKE_DOCK_WIDTH:-}" ;;
+            @muxboard-dock-percent) printf "%s" "${MUXBOARD_FAKE_DOCK_PERCENT:-}" ;;
+            @muxboard-dock-side) printf "%s" "${MUXBOARD_FAKE_DOCK_SIDE:-}" ;;
+            @muxboard_peek_12345) printf "%s" "${MUXBOARD_FAKE_PEEK_OPEN:-}" ;;
+            status-right) printf "%s" "${MUXBOARD_FAKE_STATUS_RIGHT:-}" ;;
+            status-left) printf "%s" "${MUXBOARD_FAKE_STATUS_LEFT:-}" ;;
+            @minimal-tmux-status-right) printf "%s" "${MUXBOARD_FAKE_MINIMAL_STATUS_RIGHT:-}" ;;
+            @minimal-tmux-status-left) printf "%s" "${MUXBOARD_FAKE_MINIMAL_STATUS_LEFT:-}" ;;
+            @minimal-tmux-status-right-extra) printf "%s" "${MUXBOARD_FAKE_MINIMAL_STATUS_RIGHT_EXTRA:-}" ;;
+            @minimal-tmux-status-left-extra) printf "%s" "${MUXBOARD_FAKE_MINIMAL_STATUS_LEFT_EXTRA:-}" ;;
+            @muxboard-session-dots-attention) printf "%s" "${MUXBOARD_FAKE_DOTS_ATTENTION:-}" ;;
+            @muxboard-session-dots-current) printf "%s" "${MUXBOARD_FAKE_DOTS_CURRENT:-}" ;;
+            @muxboard-session-dots-running) printf "%s" "${MUXBOARD_FAKE_DOTS_RUNNING:-}" ;;
+            @muxboard-session-dots-quiet) printf "%s" "${MUXBOARD_FAKE_DOTS_QUIET:-}" ;;
+            @muxboard-session-dots-color) printf "%s" "${MUXBOARD_FAKE_DOTS_COLOR:-}" ;;
+            @muxboard-session-dots-attention-color) printf "%s" "${MUXBOARD_FAKE_DOTS_ATTENTION_COLOR:-}" ;;
+            @muxboard-session-dots-current-color) printf "%s" "${MUXBOARD_FAKE_DOTS_CURRENT_COLOR:-}" ;;
+            @muxboard-session-dots-running-color) printf "%s" "${MUXBOARD_FAKE_DOTS_RUNNING_COLOR:-}" ;;
+            @muxboard-session-dots-quiet-color) printf "%s" "${MUXBOARD_FAKE_DOTS_QUIET_COLOR:-}" ;;
+            prefix) printf "%s" "${MUXBOARD_FAKE_PREFIX:-C-b}" ;;
+            prefix2) printf "%s" "${MUXBOARD_FAKE_PREFIX2:-}" ;;
+        esac
+        ;;
+    display-message)
+        if [ "${1:-}" = "-p" ]; then
+            case "${2:-}" in
+                "#{pane_current_path}") printf "%s" "${MUXBOARD_FAKE_START_DIR:?}" ;;
+                "#{pane_id}") printf "%s" "${MUXBOARD_FAKE_PANE_ID:-%1}" ;;
+                "#{session_name}") printf "%s" "${MUXBOARD_FAKE_SESSION_NAME:-demo}" ;;
+                "#{window_id}") printf "%s" "${MUXBOARD_FAKE_WINDOW_ID:-@1}" ;;
+                "#{window_width}") printf "%s" "${MUXBOARD_FAKE_WINDOW_WIDTH:-120}" ;;
+                "#{client_pid}") printf "%s" "${MUXBOARD_FAKE_CLIENT_PID:-12345}" ;;
+                *) printf "%s" "${MUXBOARD_FAKE_START_DIR:?}" ;;
+            esac
+        else
+            printf "display-message %s\n" "$*" >>"${MUXBOARD_FAKE_LOG:?}"
+        fi
+        ;;
+    list-commands)
+        if [ "${1:-}" = "split-window" ] && [ "${MUXBOARD_FAKE_NO_FULL_SPLIT:-}" = "1" ]; then
+            printf "split-window (splitw) [-bdehIPvZ] [-c start-directory] [-e environment] [-F format] [-l size] [-t target-pane][shell-command]\n"
+        else
+            printf "display-popup\nnew-window\nsplit-window (splitw) [-bdefhIPvZ] [-c start-directory] [-e environment] [-F format] [-l size] [-t target-pane][shell-command]\n"
+        fi
+        ;;
+    split-window)
+        printf "%s %s\n" "$cmd" "$*" >>"${MUXBOARD_FAKE_LOG:?}"
+        case " $* " in
+            *" -P "*) printf "%s" "${MUXBOARD_FAKE_NEW_PANE:-%99}" ;;
+        esac
+        ;;
+    show-environment)
+        if [ "$#" -gt 0 ] && [ "${1:-}" = "-g" ] && [ "$#" -gt 1 ]; then
+            case "${2:-}" in
+                MUXBOARD_AGENT_PANE__1_STATE)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ]; then
+                        printf "MUXBOARD_AGENT_PANE__1_STATE=%s\n" "${MUXBOARD_FAKE_AGENT_STATE:-waiting}"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__1_AGENT)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ]; then
+                        printf "MUXBOARD_AGENT_PANE__1_AGENT=%s\n" "${MUXBOARD_FAKE_AGENT_AGENT:-codex}"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__1_SUMMARY)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ]; then
+                        printf "MUXBOARD_AGENT_PANE__1_SUMMARY=%s\n" "${MUXBOARD_FAKE_AGENT_SUMMARY:-approval}"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__1_UNSEEN)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ]; then
+                        printf "MUXBOARD_AGENT_PANE__1_UNSEEN=%s\n" "${MUXBOARD_FAKE_AGENT_UNSEEN:-}"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__2_STATE)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ] && [ -n "${MUXBOARD_FAKE_AGENT2_STATE:-}" ]; then
+                        printf "MUXBOARD_AGENT_PANE__2_STATE=%s\n" "$MUXBOARD_FAKE_AGENT2_STATE"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__2_AGENT)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ] && [ -n "${MUXBOARD_FAKE_AGENT2_AGENT:-}" ]; then
+                        printf "MUXBOARD_AGENT_PANE__2_AGENT=%s\n" "$MUXBOARD_FAKE_AGENT2_AGENT"
+                    fi
+                    ;;
+                MUXBOARD_AGENT_PANE__2_UNSEEN)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" != "1" ] && [ -n "${MUXBOARD_FAKE_AGENT2_UNSEEN:-}" ]; then
+                        printf "MUXBOARD_AGENT_PANE__2_UNSEEN=%s\n" "$MUXBOARD_FAKE_AGENT2_UNSEEN"
+                    fi
+                    ;;
+                TMUX_AGENT_PANE_%1_STATE)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" = "1" ]; then
+                        printf "TMUX_AGENT_PANE_%%1_STATE=%s\n" "${MUXBOARD_FAKE_AGENT_STATE:-waiting}"
+                    fi
+                    ;;
+                TMUX_AGENT_PANE_%1_AGENT)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" = "1" ] && [ -n "${MUXBOARD_FAKE_AGENT_AGENT:-}" ]; then
+                        printf "TMUX_AGENT_PANE_%%1_AGENT=%s\n" "$MUXBOARD_FAKE_AGENT_AGENT"
+                    fi
+                    ;;
+                TMUX_AGENT_PANE_%1_UNSEEN)
+                    if [ "${MUXBOARD_FAKE_USE_LEGACY_AGENT:-}" = "1" ]; then
+                        printf "TMUX_AGENT_PANE_%%1_UNSEEN=%s\n" "${MUXBOARD_FAKE_AGENT_UNSEEN:-}"
+                    fi
+                    ;;
+            esac
+        fi
+        ;;
+    display-popup | new-window | select-window | select-pane | set-option | set-environment | kill-pane | bind-key | refresh-client)
+        printf "%s %s\n" "$cmd" "$*" >>"${MUXBOARD_FAKE_LOG:?}"
+        ;;
+    show-hooks)
+        printf "%s" "${MUXBOARD_FAKE_SHOW_HOOKS:-}"
+        ;;
+    set-hook)
+        printf "%s %s\n" "$cmd" "$*" >>"${MUXBOARD_FAKE_LOG:?}"
+        ;;
+    list-windows)
+        ;;
+    list-panes)
+        if [ -n "${MUXBOARD_FAKE_LIST_PANES:-}" ]; then
+            args="$*"
+            target_session=""
+            previous=""
+            for arg in "$@"; do
+                if [ "$previous" = "-t" ]; then
+                    target_session="$arg"
+                fi
+                previous="$arg"
+            done
+            while IFS=$'\t' read -r pane_id pane_session; do
+                [ -n "$pane_id" ] || continue
+                if [ -n "$target_session" ] && [ "$pane_session" != "$target_session" ]; then
+                    continue
+                fi
+                if [[ "$args" == *"session_name"* ]]; then
+                    printf "%s\t%s\n" "$pane_id" "$pane_session"
+                else
+                    printf "%s\n" "$pane_id"
+                fi
+            done <<<"$MUXBOARD_FAKE_LIST_PANES"
+        elif [ -n "${MUXBOARD_FAKE_DOCK_PANE:-}" ]; then
+            printf "%s\t1\n" "$MUXBOARD_FAKE_DOCK_PANE"
+        elif [ -n "${MUXBOARD_FAKE_OTHER_PANE:-}" ]; then
+            printf "%s\t0\n" "$MUXBOARD_FAKE_OTHER_PANE"
+        fi
+        ;;
+    list-sessions)
+        printf "%b" "${MUXBOARD_FAKE_LIST_SESSIONS:-}"
+        ;;
+    *)
+        printf "%s %s\n" "$cmd" "$*" >>"${MUXBOARD_FAKE_LOG:?}"
+        ;;
+esac
+FAKE
+
+chmod +x "$FAKE_TMUX"
+
+run_helper() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        "$HELPER" "$@"
+}
+
+run_entrypoint() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        "$ENTRYPOINT"
+}
+
+run_agent_state() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        TMUX_PANE="" \
+        "$STATE_HELPER" "$@"
+}
+
+run_mark_seen() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        TMUX_PANE="" \
+        "$MARK_SEEN_HELPER" "$@"
+}
+
+run_codex_notify() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        TMUX_PANE="" \
+        "$CODEX_NOTIFY" "$@"
+}
+
+run_status_helper() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        "$STATUS_HELPER" "$@" >"$OUTPUT_PATH"
+}
+
+run_dots_helper() {
+    : >"$LOG_PATH"
+    PATH="$TMP_DIR:$PATH" \
+        MUXBOARD_FAKE_LOG="$LOG_PATH" \
+        MUXBOARD_FAKE_START_DIR="$START_DIR" \
+        "$DOTS_HELPER" "$@" >"$OUTPUT_PATH"
+}
+
+assert_log_contains() {
+    local expected="$1"
+
+    if ! grep -Fq -- "$expected" "$LOG_PATH"; then
+        echo "Expected plugin smoke log to contain: $expected" >&2
+        echo "--- log ---" >&2
+        cat "$LOG_PATH" >&2
+        exit 1
+    fi
+}
+
+assert_log_not_contains() {
+    local unexpected="$1"
+
+    if grep -Fq -- "$unexpected" "$LOG_PATH"; then
+        echo "Expected plugin smoke log not to contain: $unexpected" >&2
+        echo "--- log ---" >&2
+        cat "$LOG_PATH" >&2
+        exit 1
+    fi
+}
+
+assert_output_equals() {
+    local expected="$1"
+    local actual
+    actual="$(cat "$OUTPUT_PATH" 2>/dev/null || true)"
+
+    if [ "$actual" != "$expected" ]; then
+        echo "Expected helper output: $expected" >&2
+        echo "Actual helper output: $actual" >&2
+        echo "--- log ---" >&2
+        cat "$LOG_PATH" >&2
+        exit 1
+    fi
+}
+
+MUXBOARD_FAKE_OPEN_PRESET=drawer run_helper
+assert_log_contains "display-popup -d $START_DIR -x R -y 0 -w 45% -h 100% -E"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=1"
+assert_log_not_contains "split-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock run_helper --preset drawer
+assert_log_contains "display-popup -d $START_DIR -x R -y 0 -w 45% -h 100% -E"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=1"
+assert_log_not_contains "split-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock run_helper --toggle-peek
+assert_log_contains "set-option -gq @muxboard_peek_12345 1"
+assert_log_contains "display-popup -d $START_DIR -x R -y 0 -w 45% -h 100% -E"
+assert_log_contains "MUXBOARD_TMUX_PEEK_TOGGLE=1"
+assert_log_contains "MUXBOARD_TMUX_PEEK_PREFIX=C-b"
+assert_log_contains "MUXBOARD_TMUX_PEEK_PREFIX2="
+assert_log_contains "MUXBOARD_TMUX_PEEK_KEY=P"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=1"
+assert_log_not_contains "split-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_PREFIX2=C-a run_helper --toggle-peek
+assert_log_contains "MUXBOARD_TMUX_PEEK_PREFIX=C-b"
+assert_log_contains "MUXBOARD_TMUX_PEEK_PREFIX2=C-a"
+assert_log_contains "MUXBOARD_TMUX_PEEK_KEY=P"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_PEEK_OPEN=1 run_helper --toggle-peek
+assert_log_contains "display-popup -C"
+assert_log_contains "set-option -gu @muxboard_peek_12345"
+assert_log_not_contains "split-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -b -l 52 -c $START_DIR"
+assert_log_contains "set-option -p -t %99 @muxboard_dock 1"
+assert_log_contains "select-pane -t %99 -T muxboard"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=0"
+assert_log_not_contains "display-popup"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_DOCK_SIDE=right MUXBOARD_FAKE_DOCK_PERCENT=35 MUXBOARD_FAKE_CLOSE_AFTER_JUMP=ON run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -l 35% -c $START_DIR"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=1"
+assert_log_not_contains "display-popup"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_NO_FULL_SPLIT=1 run_helper
+assert_log_contains "display-message muxboard: full-window dock requires tmux split-window -f; opening a raw split instead"
+assert_log_contains "split-window -h -l 52 -c $START_DIR"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_DOCK_PANE=%9 run_helper
+assert_log_contains "kill-pane -t %9"
+assert_log_not_contains "split-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_OTHER_PANE=%8 MUXBOARD_FAKE_WINDOW_WIDTH=240 run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -b -l 72 -c $START_DIR"
+assert_log_not_contains "kill-pane"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_WINDOW_WIDTH=90 run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -b -l 40 -c $START_DIR"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_WINDOW_WIDTH=80 run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -b -l 36 -c $START_DIR"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_DOCK_WIDTH=58 run_helper
+assert_log_contains "split-window -P -F #{pane_id} -f -h -b -l 58 -c $START_DIR"
+
+unset MUXBOARD_FAKE_OPEN_PRESET
+run_helper
+assert_log_contains "display-popup -d $START_DIR -x C -y C -w 90% -h 85% -E"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=0"
+
+MUXBOARD_FAKE_OPEN_MODE=window run_helper
+assert_log_contains "new-window -n muxboard -c $START_DIR"
+
+MUXBOARD_FAKE_OPEN_MODE='split' run_helper
+assert_log_contains "split-window -h -l 45% -c $START_DIR"
+
+MUXBOARD_FAKE_OPEN_PRESET=drawer MUXBOARD_FAKE_POPUP_WIDTH=60% MUXBOARD_FAKE_CLOSE_AFTER_JUMP=OFF run_helper
+assert_log_contains "display-popup -d $START_DIR -x R -y 0 -w 60% -h 100% -E"
+assert_log_contains "MUXBOARD_CLOSE_AFTER_JUMP=0"
+
+run_entrypoint
+assert_log_contains "bind-key M run-shell -b"
+assert_log_contains "muxboard-open"
+assert_log_contains "set-hook -ag pane-focus-in run-shell -b"
+assert_log_contains "set-hook -ag after-select-pane run-shell -b"
+assert_log_contains "set-hook -ag after-select-window run-shell -b"
+assert_log_contains "muxboard-mark-seen"
+assert_log_not_contains "--preset drawer"
+
+MUXBOARD_FAKE_MARK_SEEN_ON_FOCUS=off run_entrypoint
+assert_log_not_contains "set-hook -ag pane-focus-in"
+assert_log_not_contains "set-hook -ag after-select-pane"
+assert_log_not_contains "set-hook -ag after-select-window"
+
+MUXBOARD_FAKE_OPEN_PRESET=dock MUXBOARD_FAKE_DRAWER_KEY=P run_entrypoint
+assert_log_contains "bind-key M run-shell -b"
+assert_log_contains "bind-key P run-shell -b"
+assert_log_contains "--toggle-peek"
+
+MUXBOARD_FAKE_STATUS_RIGHT='#{muxboard_session_dots} #{muxboard_status}' run_entrypoint
+assert_log_contains "set-option -gq status-right"
+assert_log_contains "muxboard-session-dots"
+assert_log_contains "muxboard-status"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=approval run_status_helper demo
+assert_output_equals "mux ! codex"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=complete MUXBOARD_FAKE_AGENT_UNSEEN=1 run_status_helper demo
+assert_output_equals "mux ! codex"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=complete MUXBOARD_FAKE_AGENT_UNSEEN=seen run_status_helper demo
+assert_output_equals "mux done codex"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=tool_running run_status_helper demo
+assert_output_equals "mux + codex"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo\n%2\tdemo' MUXBOARD_FAKE_AGENT_STATE=approval MUXBOARD_FAKE_AGENT2_STATE=done MUXBOARD_FAKE_AGENT2_AGENT=claude MUXBOARD_FAKE_AGENT2_UNSEEN=1 run_status_helper demo
+assert_output_equals "mux !2"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_USE_LEGACY_AGENT=1 MUXBOARD_FAKE_AGENT_STATE=done MUXBOARD_FAKE_AGENT_UNSEEN=unseen run_status_helper demo
+assert_output_equals "mux !1"
+
+MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_USE_LEGACY_AGENT=1 MUXBOARD_FAKE_AGENT_AGENT="Claude Code" MUXBOARD_FAKE_AGENT_STATE=done MUXBOARD_FAKE_AGENT_UNSEEN=unseen run_status_helper demo
+assert_output_equals "mux ! claude-code"
+
+MUXBOARD_FAKE_LIST_SESSIONS=$'demo\nops\n' MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=tool_running MUXBOARD_FAKE_AGENT_UNSEEN= run_dots_helper ops
+assert_output_equals "+*"
+
+MUXBOARD_FAKE_LIST_SESSIONS=$'demo\nops\n' run_dots_helper ops
+assert_output_equals ".*"
+
+MUXBOARD_FAKE_LIST_SESSIONS=$'demo\nops\n' MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=approval MUXBOARD_FAKE_DOTS_ATTENTION='A' MUXBOARD_FAKE_DOTS_CURRENT='C' MUXBOARD_FAKE_DOTS_RUNNING='R' MUXBOARD_FAKE_DOTS_QUIET='Q' run_dots_helper ops
+assert_output_equals "AC"
+
+MUXBOARD_FAKE_LIST_SESSIONS=$'demo\nops\n' MUXBOARD_FAKE_LIST_PANES=$'%1\tdemo' MUXBOARD_FAKE_AGENT_STATE=approval MUXBOARD_FAKE_DOTS_COLOR='colour244' MUXBOARD_FAKE_DOTS_ATTENTION_COLOR='yellow' MUXBOARD_FAKE_DOTS_CURRENT_COLOR='green' run_dots_helper ops
+assert_output_equals "#[fg=colour244]#[fg=yellow]!#[fg=colour244]#[fg=green]*#[fg=colour244]#[default]"
+
+run_agent_state --agent codex --state waiting --summary "approval needed" --pane "%1"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_AGENT codex"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_STATE waiting"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_SUMMARY approval needed"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_UPDATED_AT"
+assert_log_contains "refresh-client -S"
+
+run_agent_state --state off --pane "%1"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_AGENT"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_STATE"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_SUMMARY"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_THREAD_ID"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_THREAD_NAME"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_PROGRESS"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_LOG"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_UNSEEN"
+assert_log_contains "set-environment -gu MUXBOARD_AGENT_PANE__1_UPDATED_AT"
+
+run_agent_state --agent codex --state done --summary "ready to review" --thread-id "turn-123" --thread-name "Ship V1" --progress "10/10 tests" --log "passed" --pane "%1"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_STATE done"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_THREAD_ID turn-123"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_THREAD_NAME Ship V1"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_PROGRESS 10/10 tests"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_LOG passed"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_UNSEEN 1"
+
+run_agent_state --agent codex --state done --summary "historical" --seen --pane "%1"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_UNSEEN 0"
+
+MUXBOARD_FAKE_AGENT_STATE=done MUXBOARD_FAKE_AGENT_UNSEEN=1 run_mark_seen --pane "%1"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_UNSEEN 0"
+assert_log_contains "set-environment -g TMUX_AGENT_PANE_%1_UNSEEN 0"
+assert_log_contains "refresh-client -S"
+
+MUXBOARD_FAKE_AGENT_STATE=waiting MUXBOARD_FAKE_AGENT_UNSEEN=1 run_mark_seen --pane "%1"
+assert_log_not_contains "set-environment -g MUXBOARD_AGENT_PANE__1_UNSEEN 0"
+assert_log_not_contains "refresh-client -S"
+
+MUXBOARD_FAKE_USE_LEGACY_AGENT=1 MUXBOARD_FAKE_AGENT_STATE=interrupted MUXBOARD_FAKE_AGENT_UNSEEN=unseen run_mark_seen --pane "%1"
+assert_log_contains "set-environment -g TMUX_AGENT_PANE_%1_UNSEEN 0"
+
+run_codex_notify permission-request
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_AGENT codex"
+assert_log_contains "set-environment -g MUXBOARD_AGENT_PANE__1_STATE waiting"

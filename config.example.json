@@ -1,0 +1,154 @@
+{
+  "notification_settings": {
+    "bell_enabled": true,
+    "desktop_enabled": true,
+    "alert_policy": "AllAttention",
+    "debounce_seconds": 30
+  },
+  "ui_settings": {
+    "layout_preset": "Auto",
+    "theme": {
+      "preset": "TerminalNative",
+      "overrides": {}
+    },
+    "keybindings": {
+      "quit": [
+        "q"
+      ],
+      "move_down": [
+        "j",
+        "down"
+      ],
+      "move_up": [
+        "k",
+        "up"
+      ],
+      "panel_focus": [
+        "tab"
+      ],
+      "search": [
+        "/"
+      ],
+      "command": [
+        ":"
+      ],
+      "mark": [
+        "space"
+      ],
+      "clear_marks": [
+        "x"
+      ],
+      "summaries": [
+        "s"
+      ],
+      "actions": [
+        "."
+      ],
+      "smart_action": [
+        "a"
+      ],
+      "focus": [
+        "enter"
+      ],
+      "jump": [
+        "g"
+      ],
+      "refresh": [
+        "r"
+      ],
+      "repeat_last": [
+        "]"
+      ],
+      "macro_assign": [
+        "p"
+      ],
+      "macro_slot_1": [
+        "1"
+      ],
+      "macro_slot_2": [
+        "2"
+      ],
+      "macro_slot_3": [
+        "3"
+      ],
+      "macro_slot_4": [
+        "4"
+      ],
+      "macro_slot_5": [
+        "5"
+      ],
+      "action_sort": [
+        "t"
+      ],
+      "action_filter": [
+        "f"
+      ],
+      "action_view_browse": [
+        "["
+      ],
+      "action_view_command_center": [
+        "]"
+      ],
+      "action_group_save": [
+        "g"
+      ],
+      "action_group_load": [
+        "l"
+      ],
+      "action_group_delete": [
+        "d"
+      ],
+      "action_launch_agent": [
+        "+"
+      ],
+      "action_lane_target": [
+        "b"
+      ],
+      "action_ack_selected": [
+        "c"
+      ],
+      "action_ack_clear_selected": [
+        "w"
+      ],
+      "action_ack_all": [
+        "a"
+      ],
+      "action_ack_clear_all": [
+        "u"
+      ],
+      "action_enter_queue": [
+        "i"
+      ],
+      "action_zoom": [
+        "z"
+      ],
+      "action_send_enter": [
+        "e"
+      ],
+      "action_send_yes": [
+        "y"
+      ],
+      "action_send_no": [
+        "n"
+      ],
+      "action_layout": [
+        "L"
+      ],
+      "action_metrics": [
+        "m"
+      ],
+      "action_desktop_notifications": [
+        "o"
+      ],
+      "action_bell": [
+        "v"
+      ],
+      "action_alert_debounce": [
+        "h"
+      ],
+      "action_alert_policy": [
+        "p"
+      ]
+    }
+  }
+}

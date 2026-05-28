@@ -1,0 +1,18 @@
+muxboard                                                     Command Center  demo/agents  1-1 / 1  1 needs you
+
+                         ┌Command Center────────────────────────────────────────────┐
+                         │ Action: : reply to demo / agents                         │
+                         │ Needs you: 1 waiting                                     │
+                         │ Target: demo / agents                                    │
+                         │ Start: + agent in workspace                              │
+                         │ Queue                                                    │
+                         │ > reply to demo / agents: approval needed                │
+                         │                                                          │
+                         │ Lanes                                                    │
+                         │ > codex: 1 pane | 1 waiting                              │
+                         └──────────────────────────────────────────────────────────┘
+
+
+
+
+? help  : reply  J/K move  Esc back  G show  / filter  L layout  . more  Q quit

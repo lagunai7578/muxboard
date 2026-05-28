@@ -1,0 +1,463 @@
+[
+  {
+    "name": "claude_network_approval",
+    "command": "claude",
+    "lines": [
+      "Waiting for leader to approve network access to api.example.com"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval: network access",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval: network access",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_tool_progress_partial",
+    "command": "claude",
+    "partial_line": "Tool Bash running for 3s...",
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Running",
+    "expected_summary": "tool: Bash",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "wait for Bash"
+    }
+  },
+  {
+    "name": "codex_pending_init",
+    "command": "codex",
+    "lines": [
+      "Pending init"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Running",
+    "expected_summary": "starting agent",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "initialize agent"
+    }
+  },
+  {
+    "name": "codex_error_state",
+    "command": "codex",
+    "lines": [
+      "Error tool timeout"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Error",
+    "expected_summary": "error",
+    "expected_report": {
+      "status": "error",
+      "blocker": "tool timeout",
+      "next": "show output"
+    }
+  },
+  {
+    "name": "codex_shutdown_state",
+    "command": "codex",
+    "lines": [
+      "Shutdown"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Done",
+    "expected_summary": "agent shutdown",
+    "expected_report": {
+      "status": "done",
+      "blocker": "none",
+      "next": "agent shutdown"
+    }
+  },
+  {
+    "name": "codex_not_found_state",
+    "command": "codex",
+    "lines": [
+      "Not Found"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Error",
+    "expected_summary": "agent not found",
+    "expected_report": {
+      "status": "error",
+      "blocker": "not found",
+      "next": "show output"
+    }
+  },
+  {
+    "name": "opencode_question_event",
+    "command": "opencode",
+    "lines": [
+      "question.asked"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "claude_choose_prompt",
+    "command": "claude",
+    "lines": [
+      "Choose [1/2] (default: 1):"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "codex_interrupted_state",
+    "command": "codex",
+    "lines": [
+      "Interrupted"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Waiting",
+    "expected_summary": "interrupted",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "interrupted",
+      "next": "resume"
+    }
+  },
+  {
+    "name": "opencode_permission_required_ui",
+    "command": "opencode",
+    "lines": [
+      "Permission required"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_dialog_open",
+    "command": "claude",
+    "lines": [
+      "dialog open"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for dialog",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "dialog open",
+      "next": "open dialog"
+    }
+  },
+  {
+    "name": "claude_answered_questions",
+    "command": "claude",
+    "lines": [
+      "User has answered your questions: \"A\"=\"B\""
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Running",
+    "expected_summary": "continue from answers",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "resume"
+    }
+  },
+  {
+    "name": "codex_completed_with_payload",
+    "command": "codex",
+    "lines": [
+      "Completed 39916800"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Done",
+    "expected_summary": "completed",
+    "expected_report": {
+      "status": "done",
+      "blocker": "none",
+      "next": "39916800"
+    }
+  },
+  {
+    "name": "opencode_question_rejected",
+    "command": "opencode",
+    "lines": [
+      "question.rejected"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Error",
+    "expected_summary": "question rejected",
+    "expected_report": {
+      "status": "error",
+      "blocker": "question rejected",
+      "next": "show output"
+    }
+  },
+  {
+    "name": "codex_waiting_on_approval_compact",
+    "command": "codex",
+    "lines": [
+      "state: waitingOnApproval"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_worker_request",
+    "command": "claude",
+    "lines": [
+      "Worker request: run tests in sandbox"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval: worker request",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval: worker request",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_sandbox_request",
+    "command": "claude",
+    "lines": [
+      "Sandbox request: allow file write"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval: sandbox request",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval: sandbox request",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_tool_still_running",
+    "command": "claude",
+    "lines": [
+      "Tool 'WebFetch' still running (45s)"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Running",
+    "expected_summary": "tool: WebFetch",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "wait for WebFetch"
+    }
+  },
+  {
+    "name": "opencode_question_replied",
+    "command": "opencode",
+    "lines": [
+      "question.replied"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Running",
+    "expected_summary": "continue from answers",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "resume"
+    }
+  },
+  {
+    "name": "opencode_permission_replied",
+    "command": "opencode",
+    "lines": [
+      "permission.replied"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Running",
+    "expected_summary": "continue after permission",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "resume"
+    }
+  },
+  {
+    "name": "codex_waiting_for_worker_pool",
+    "command": "codex",
+    "lines": [
+      "Waiting for worker pool"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for worker pool",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "waiting for worker pool",
+      "next": "show agents"
+    }
+  },
+  {
+    "name": "opencode_type_answer_prompt",
+    "command": "opencode",
+    "lines": [
+      "Type your answer..."
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "opencode_select_all_answers_prompt",
+    "command": "opencode",
+    "lines": [
+      "Select all answers that apply"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "codex_node_harness_detected_from_waiting_on_approval",
+    "command": "node",
+    "lines": [
+      "codex state: waitingOnApproval"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_node_harness_detected_from_worker_request",
+    "command": "node",
+    "lines": [
+      "Claude Code worker request: run tests in sandbox"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval: worker request",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval: worker request",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "opencode_node_harness_detected_from_permission_event",
+    "command": "node",
+    "lines": [
+      "opencode permission.asked"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "codex_zsh_harness_detected_from_waiting_on_approval",
+    "command": "zsh",
+    "lines": [
+      "{\"state\":\"waitingOnApproval\",\"tool\":\"exec_command\"}"
+    ],
+    "expected_workload": "Codex",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  },
+  {
+    "name": "claude_python_harness_detected_from_tool_progress",
+    "command": "python",
+    "partial_line": "Tool Bash running for 3s…",
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Running",
+    "expected_summary": "tool: Bash",
+    "expected_report": {
+      "status": "running",
+      "blocker": "none",
+      "next": "wait for Bash"
+    }
+  },
+  {
+    "name": "claude_bash_harness_detected_from_question_prompt",
+    "command": "bash",
+    "lines": [
+      "Answer questions?"
+    ],
+    "expected_workload": "ClaudeCode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "opencode_python_harness_detected_from_json_question_event",
+    "command": "python",
+    "lines": [
+      "{\"type\":\"question.asked\",\"properties\":{\"questions\":[{\"question\":\"Pick a target\"}]}}"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "waiting for input",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "input needed",
+      "next": "answer"
+    }
+  },
+  {
+    "name": "opencode_zsh_harness_detected_from_json_permission_event",
+    "command": "zsh",
+    "lines": [
+      "{\"type\":\"permission.asked\",\"properties\":{\"pattern\":\"bash\"}}"
+    ],
+    "expected_workload": "Opencode",
+    "expected_status": "Waiting",
+    "expected_summary": "needs approval",
+    "expected_report": {
+      "status": "waiting",
+      "blocker": "approval needed",
+      "next": "approve"
+    }
+  }
+]

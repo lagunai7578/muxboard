@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF' >&2
+Usage: muxboard-mark-seen [--pane <pane_id>]
+EOF
+}
+
+pane_id="${TMUX_PANE:-}"
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --pane)
+            shift
+            pane_id="${1:-}"
+            ;;
+        --pane=*)
+            pane_id="${1#--pane=}"
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+if ! command -v tmux >/dev/null 2>&1; then
+    exit 0
+fi
+
+if [ -z "$pane_id" ]; then
+    pane_id="$(tmux display-message -p '#{pane_id}' 2>/dev/null || true)"
+fi
+
+if [ -z "$pane_id" ]; then
+    exit 0
+fi
+
+fragment() {
+    printf "%s" "$1" | sed 's/[^A-Za-z0-9]/_/g'
+}
+
+show_env_value() {
+    tmux show-environment -g "$1" 2>/dev/null | sed 's/^[^=]*=//' || true
+}
+
+normalize_state() {
+    local value
+    value="$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$value" in
+        done | complete | completed | finished | success | stop) printf "done" ;;
+        error | failed | failure | panic) printf "error" ;;
+        stuck | stale | interrupted | hung) printf "stuck" ;;
+        *) printf "%s" "$value" ;;
+    esac
+}
+
+is_seen_false() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        0 | false | no | off | seen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_unseen_true() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        1 | true | yes | on | unseen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+review_state_should_clear() {
+    local state="$1"
+    local unseen="$2"
+
+    case "$state" in
+        done) is_unseen_true "$unseen" ;;
+        error | stuck) ! is_seen_false "$unseen" ;;
+        *) return 1 ;;
+    esac
+}
+
+fragment="$(fragment "$pane_id")"
+muxboard_state_key="MUXBOARD_AGENT_PANE_${fragment}_STATE"
+muxboard_unseen_key="MUXBOARD_AGENT_PANE_${fragment}_UNSEEN"
+legacy_state_key="TMUX_AGENT_PANE_${pane_id}_STATE"
+legacy_unseen_key="TMUX_AGENT_PANE_${pane_id}_UNSEEN"
+
+muxboard_state="$(normalize_state "$(show_env_value "$muxboard_state_key")")"
+muxboard_unseen="$(show_env_value "$muxboard_unseen_key")"
+changed=0
+
+if [ -n "$muxboard_state" ]; then
+    if review_state_should_clear "$muxboard_state" "$muxboard_unseen"; then
+        tmux set-environment -g "$muxboard_unseen_key" "0"
+        tmux set-environment -g "$legacy_unseen_key" "0"
+        changed=1
+    fi
+else
+    legacy_state="$(normalize_state "$(show_env_value "$legacy_state_key")")"
+    legacy_unseen="$(show_env_value "$legacy_unseen_key")"
+    if review_state_should_clear "$legacy_state" "$legacy_unseen"; then
+        tmux set-environment -g "$muxboard_unseen_key" "0"
+        tmux set-environment -g "$legacy_unseen_key" "0"
+        changed=1
+    fi
+fi
+
+if [ "$changed" = "1" ]; then
+    tmux refresh-client -S 2>/dev/null || true
+fi

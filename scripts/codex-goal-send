@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+usage: scripts/codex-goal-send GOAL [TMUX_TARGET]
+
+Send docs/goals/GOAL.md into an existing Codex tmux pane's /goal flow.
+If TMUX_TARGET is omitted, the script only proceeds when exactly one Codex
+pane is visible across the tmux server.
+USAGE
+}
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+goal_name="${1:-}"
+target="${2:-}"
+
+if [[ -z "$goal_name" || "$goal_name" == "-h" || "$goal_name" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+case "$goal_name" in
+  *[!A-Za-z0-9_-]*)
+    die "goal names may only contain letters, numbers, underscores, and dashes"
+    ;;
+esac
+
+command -v tmux >/dev/null || die "tmux is required"
+[[ -n "${TMUX:-}" ]] || die "run this inside tmux so Codex has a pane target"
+
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+goal="$root/docs/goals/$goal_name.md"
+[[ -f "$goal" ]] || die "missing saved goal: $goal"
+
+if [[ -z "$target" ]]; then
+  mapfile -t matches < <(tmux list-panes -a -F '#{pane_id}	#{pane_current_command}	#{session_name}:#{window_index}.#{pane_index}	#{pane_current_path}' | awk -F '\t' '$2 == "codex" { print $0 }')
+  if [[ "${#matches[@]}" -ne 1 ]]; then
+    printf 'Expected exactly one Codex pane, found %s.\n' "${#matches[@]}" >&2
+    if [[ "${#matches[@]}" -gt 0 ]]; then
+      printf 'Pass one of these pane ids as the second argument:\n' >&2
+      printf '%s\n' "${matches[@]}" >&2
+    fi
+    exit 1
+  fi
+  target="${matches[0]%%$'\t'*}"
+fi
+
+tmux load-buffer "$goal"
+tmux send-keys -t "$target" "/goal" C-m
+sleep 0.2
+tmux paste-buffer -t "$target"
+sleep 0.1
+tmux send-keys -t "$target" C-m
+
+printf 'Sent %s to Codex pane %s.\n' "$goal_name" "$target"

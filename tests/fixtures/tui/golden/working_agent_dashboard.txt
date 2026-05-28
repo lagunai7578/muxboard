@@ -1,0 +1,18 @@
+muxboard                                                                                  demo/build  1-1 / 1  1 working
+┌Fleet | 1-1 / 1 | 1 working────────────────────────────┐ ┌Details─────────────────────────────────────────────────────┐
+│   Where        Latest                                 │ │demo/build                                                  │
+│>+ demo/build   codex Checking command center queue    │ │State: Running   Tool: Codex                                │
+│                overflow                               │ │Now: Checking command center queue overflow                 │
+│                                                       │ │                                                            │
+│                                                       │ │Output                                                      │
+│                                                       │ │  run cargo test --all-targets --all-features               │
+│                                                       │ │  compile muxboard v1.0.0                                   │
+│                                                       │ │  run renderer golden tests                                 │
+│                                                       │ │  run live tmux action contract                             │
+│                                                       │ │  Reviewing final screen for confusing copy                 │
+│                                                       │ │                                                            │
+│                                                       │ │Updated: 0s ago                                             │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+└───────────────────────────────────────────────────────┘ └────────────────────────────────────────────────────────────┘
+? help  J/K move  Tab focus  Enter output  G show  Space add  : send  / filter  L layout  . more  Q quit

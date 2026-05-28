@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">muxboard demo</title>
+  <desc id="desc">A terminal-style preview of muxboard showing Fleet, Details, Command Center, Browse, and Output panels.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#0b1220" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+      .title { fill: #e5e7eb; font-size: 22px; font-weight: 700; }
+      .label { fill: #93c5fd; font-size: 18px; font-weight: 700; }
+      .text { fill: #d1d5db; font-size: 18px; }
+      .muted { fill: #94a3b8; font-size: 17px; }
+      .cyan { fill: #67e8f9; }
+      .green { fill: #86efac; }
+      .yellow { fill: #fde68a; }
+      .red { fill: #fca5a5; }
+      .dim { fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="900" fill="#0f172a" />
+  <rect x="90" y="60" width="1220" height="780" rx="18" fill="url(#bg)" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)" />
+
+  <rect x="90" y="60" width="1220" height="42" rx="18" fill="#111827" />
+  <circle cx="120" cy="81" r="7" fill="#f87171" />
+  <circle cx="145" cy="81" r="7" fill="#fbbf24" />
+  <circle cx="170" cy="81" r="7" fill="#34d399" />
+  <text x="700" y="87" text-anchor="middle" class="mono muted">muxboard  tmux command center</text>
+
+  <rect x="120" y="126" width="1160" height="78" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="142" y="154" class="mono label">Quick start</text>
+  <text x="142" y="184" class="mono text">J/K move   Enter output   G show   Space add   : send   S summary   . more   Q quit</text>
+
+  <rect x="120" y="224" width="290" height="238" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="142" y="252" class="mono label">Command Center</text>
+  <text x="142" y="286" class="mono text">Action: <tspan class="yellow">A continue demo / agents</tspan></text>
+  <text x="142" y="317" class="mono text">Needs you: <tspan class="red">1 waiting</tspan>, 0 errors</text>
+  <text x="142" y="348" class="mono text">Working: <tspan class="green">2 agents</tspan></text>
+  <text x="142" y="379" class="mono text">Send: fleet triage (2)</text>
+  <text x="142" y="410" class="mono text">Start: + agent in muxboard</text>
+  <text x="142" y="441" class="mono muted">calm fleet control, no repo context needed</text>
+
+  <rect x="430" y="224" width="850" height="238" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="452" y="252" class="mono label">Fleet | 1-3 / 7 | 1 needs you</text>
+  <text x="452" y="286" class="mono muted">   Where        Now         Latest</text>
+  <text x="452" y="320" class="mono text red">&gt;! demo/agents  needs you   network access</text>
+  <text x="452" y="352" class="mono text green"> * demo/build   working     codex: writing renderer tests</text>
+  <text x="452" y="384" class="mono text cyan"> + demo/review  working     opencode: reviewing fixes</text>
+  <text x="452" y="416" class="mono muted">Legend: &gt; selected, * active, + listed, ! alert, ~ muted.</text>
+
+  <rect x="120" y="484" width="290" height="290" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="142" y="512" class="mono label">Browse</text>
+  <text x="142" y="546" class="mono text">ops:</text>
+  <text x="142" y="578" class="mono text cyan">&gt;* agents (3 panes, h142)</text>
+  <text x="142" y="610" class="mono text">   build  (2 panes, h66)</text>
+  <text x="142" y="642" class="mono text">   review (2 panes, h51)</text>
+  <text x="142" y="686" class="mono muted">Enter scopes a window. Backspace returns.</text>
+
+  <rect x="430" y="484" width="410" height="290" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="452" y="512" class="mono label">Details</text>
+  <text x="452" y="546" class="mono text">demo/agents</text>
+  <text x="452" y="578" class="mono text">State: <tspan class="yellow">Waiting</tspan> | Tool: Claude Code</text>
+  <text x="452" y="610" class="mono text">Blocked: network access</text>
+  <text x="452" y="642" class="mono text">Action: <tspan class="yellow">approve</tspan></text>
+  <text x="452" y="674" class="mono text">Output</text>
+  <text x="452" y="718" class="mono muted">Waiting for approval to reach api.example.com</text>
+
+  <rect x="860" y="484" width="420" height="290" rx="10" fill="#0b1220" stroke="#243041" />
+  <text x="882" y="512" class="mono label">Output</text>
+  <text x="882" y="546" class="mono text">demo / build</text>
+  <text x="882" y="584" class="mono text">Running | 3s ago</text>
+  <text x="882" y="616" class="mono text green">Summary: write renderer tests</text>
+  <text x="882" y="648" class="mono text">Latest: cargo test --all</text>
+
+  <rect x="120" y="792" width="1160" height="24" rx="6" fill="#111827" />
+  <text x="140" y="809" class="mono muted">? help  J/K move  Enter output  G show  Space add  : send  / filter  . more  Q quit</text>
+</svg>

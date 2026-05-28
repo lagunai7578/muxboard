@@ -1,0 +1,117 @@
+[
+  {
+    "name": "search_mode_compact_board_title",
+    "search_query": "approval",
+    "marked_pane_ids": [
+      "%1"
+    ],
+    "metrics_mode": "local",
+    "board_title_limit": 8,
+    "board_title_width": 68,
+    "expected_board_title": "Fleet | no matches",
+    "expected_footer": "? help  1 pane hidden  : send  X clear  backspace show all  Q quit",
+    "footer_width": 68
+  },
+  {
+    "name": "confirm_dispatch_header_and_footer",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "codex",
+        "window_name": "agents",
+        "active": true
+      },
+      {
+        "id": "%2",
+        "command": "claude",
+        "window_name": "agents",
+        "active": false
+      }
+    ],
+    "pending_dispatch": {
+      "text": "continue",
+      "expanded": [
+        [
+          "%1",
+          "continue"
+        ],
+        [
+          "%2",
+          "continue"
+        ]
+      ],
+      "target_description": "fleet triage (2 panes)"
+    },
+    "header_width": 100,
+    "footer_width": 80,
+    "expected_header_context": "Review send to fleet triage (2 panes). Enter sends, Esc cancels.",
+    "expected_footer": "? help  Enter send  Esc cancel"
+  },
+  {
+    "name": "command_input_context",
+    "command_input": "echo {window}",
+    "header_width": 80,
+    "expected_header_context": "Send to demo / agents.",
+    "footer_width": 88,
+    "expected_footer": "type text  Enter send  Esc cancel  backspace delete"
+  },
+  {
+    "name": "attention_board_row_summary",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "codex",
+        "window_name": "agents",
+        "active": true
+      }
+    ],
+    "runtimes": [
+      {
+        "pane_id": "%1",
+        "lines": [
+          "Waiting for approval. Continue?"
+        ]
+      }
+    ],
+    "board_row_limit": 8,
+    "expected_first_row": {
+      "status": "waiting",
+      "location": "demo/agents",
+      "title": "approval needed",
+      "selected": true,
+      "attention": "!"
+    }
+  },
+  {
+    "name": "empty_search_result_board_title",
+    "search_query": "zzz-no-match",
+    "board_title_limit": 8,
+    "board_title_width": 80,
+    "expected_board_title": "Fleet | no matches",
+    "expected_footer": "? help  backspace show all  / filter  . more  Q quit",
+    "footer_width": 80
+  },
+  {
+    "name": "confirm_dispatch_compact_header",
+    "pending_dispatch": {
+      "text": "continue",
+      "expanded": [
+        [
+          "%1",
+          "continue"
+        ],
+        [
+          "%2",
+          "continue"
+        ],
+        [
+          "%3",
+          "continue"
+        ]
+      ],
+      "target_description": "Codex lane (3 panes)"
+    },
+    "header_width": 60,
+    "expected_header_context": "Review send to 3 panes."
+  }
+]

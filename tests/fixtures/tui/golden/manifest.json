@@ -1,0 +1,646 @@
+[
+  {
+    "file": "actions_overlay.txt",
+    "journey": "Open More and choose advanced actions without losing the primary path.",
+    "protects": "More must expose available power without becoming a vague command palette.",
+    "must_show": [
+      "muxboard",
+      "More",
+      "Action: : send this pane",
+      "To: demo / agents",
+      "send text",
+      "browse windows",
+      "command center",
+      "Start",
+      "start agent",
+      "show in tmux",
+      "? help",
+      "Esc close"
+    ],
+    "must_not_show": [
+      "choose action",
+      "Smart action",
+      "target panes",
+      "staged",
+      "send to demo / agents"
+    ],
+    "footer_must_show": [
+      "? help",
+      "press a listed key",
+      "Esc close"
+    ],
+    "max_boxed_lines": 14
+  },
+  {
+    "file": "command_input_mode.txt",
+    "journey": "Compose text and understand the destination and immediate send action.",
+    "protects": "Send mode must make destination, preview, and send behavior obvious.",
+    "must_show": [
+      "muxboard",
+      "Send to",
+      "Send",
+      "To: demo / agents",
+      "Text: echo",
+      "Preview",
+      "Enter send"
+    ],
+    "must_not_show": [
+      "Ready to send",
+      "staged",
+      "target",
+      "vars {session}"
+    ],
+    "footer_must_show": [
+      "Enter send",
+      "Esc cancel",
+      "backspace delete"
+    ],
+    "max_boxed_lines": 6
+  },
+  {
+    "file": "confirm_send_overlay.txt",
+    "journey": "Review a multi-pane send before anything is dispatched.",
+    "protects": "Review send must keep the blast radius and cancel path visible before dispatch.",
+    "must_show": [
+      "muxboard",
+      "Review send",
+      "Send",
+      "To: fleet triage",
+      "Text: continue",
+      "Targets",
+      "? help",
+      "Esc cancel"
+    ],
+    "must_not_show": [
+      "Ready to send",
+      "staged",
+      "target panes",
+      "target set"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Enter send",
+      "Esc cancel"
+    ],
+    "max_boxed_lines": 6
+  },
+  {
+    "file": "empty_navigator_overlay.txt",
+    "journey": "Recover from an empty Browse result.",
+    "protects": "Empty Browse must explain recovery instead of merely reporting absence.",
+    "must_show": [
+      "muxboard",
+      "Browse",
+      "No matching panes.",
+      "Action: backspace show all panes",
+      "? help"
+    ],
+    "must_not_show": [
+      "Nothing here.",
+      "No panes in view.",
+      "Backspace shows all panes.",
+      "unknown",
+      "J/K browse",
+      "Enter window",
+      "G show",
+      "Space add",
+      ": send"
+    ],
+    "footer_must_show": [
+      "? help",
+      "backspace show all",
+      "/ filter",
+      "Esc back"
+    ],
+    "max_boxed_lines": 2
+  },
+  {
+    "file": "empty_output_overlay.txt",
+    "journey": "Open Output when no useful output exists and recover without confusion.",
+    "protects": "Empty Output must stay honest without wasting space on empty metadata.",
+    "must_show": [
+      "muxboard",
+      "Output",
+      "No output yet.",
+      "? help",
+      "Esc back"
+    ],
+    "must_not_show": [
+      "J/K move",
+      "K older/J newer",
+      "Updated: no output yet",
+      "Latest: no output yet",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Esc back",
+      "Q quit"
+    ],
+    "max_boxed_lines": 8
+  },
+  {
+    "file": "empty_command_center.txt",
+    "journey": "Open Command Center before any tmux panes exist and recover immediately.",
+    "protects": "Empty Command Center must show the missing state and one recovery action without pane-only controls.",
+    "must_show": [
+      "muxboard",
+      "Command Center",
+      "No panes yet.",
+      "Action: start tmux panes, then R refresh",
+      "? help",
+      "R refresh",
+      "Esc back"
+    ],
+    "must_not_show": [
+      "Target:",
+      "Selected:",
+      "Queue",
+      "Lanes",
+      "Enter output",
+      "G show",
+      ": send",
+      "Space add",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "R refresh",
+      "Esc back",
+      ". more",
+      "Q quit"
+    ],
+    "max_boxed_lines": 2
+  },
+  {
+    "file": "empty_tmux_board.txt",
+    "journey": "Open muxboard before any tmux panes exist and recover without reading a manual.",
+    "protects": "The no-pane first screen must show the refresh key in the body and avoid pane-only actions.",
+    "must_show": [
+      "muxboard",
+      "No panes yet.",
+      "Start tmux panes, then R refresh.",
+      "? help",
+      "R refresh"
+    ],
+    "must_not_show": [
+      "No panes in view.",
+      "Clear scope",
+      "Enter output",
+      "G show",
+      "Space add",
+      ": send",
+      "Tab focus",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "R refresh",
+      ". more",
+      "Q quit"
+    ],
+    "max_boxed_lines": 9
+  },
+  {
+    "file": "empty_search_board.txt",
+    "journey": "Search to no matches and understand how to recover.",
+    "protects": "Empty search must preserve context and make recovery unavoidable.",
+    "must_show": [
+      "muxboard",
+      "no matches",
+      "No matching panes.",
+      "Action: backspace show all panes",
+      "? help"
+    ],
+    "must_not_show": [
+      "Nothing here.",
+      "No panes in view.",
+      "Backspace shows all panes.",
+      "unknown",
+      "Enter output",
+      "G show",
+      "Space add",
+      ": send",
+      "Tab focus"
+    ],
+    "footer_must_show": [
+      "? help",
+      "backspace show all",
+      "/ filter",
+      ". more",
+      "Q quit"
+    ],
+    "max_boxed_lines": 9
+  },
+  {
+    "file": "no_match_command_center.txt",
+    "journey": "Filter Command Center to no matches and recover without pane-only controls.",
+    "protects": "Command Center no-match must show the empty state before the recovery action and keep backspace truthful.",
+    "must_show": [
+      "muxboard",
+      "Command Center",
+      "no matches",
+      "No matching panes.",
+      "Action: backspace show all panes",
+      "? help",
+      "backspace show all",
+      "Esc back"
+    ],
+    "must_not_show": [
+      "Nothing here.",
+      "No panes in view.",
+      "Target:",
+      "Selected:",
+      "Queue",
+      "Lanes",
+      "Enter output",
+      "G show",
+      "Space add",
+      ": send",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "backspace show all",
+      "Esc back",
+      "/ filter",
+      ". more",
+      "Q quit"
+    ],
+    "max_boxed_lines": 2
+  },
+  {
+    "file": "fleet_picker_overlay.txt",
+    "journey": "Choose a named saved fleet directly instead of cycling blindly.",
+    "protects": "Saved fleets must expose names, live counts, load, delete, and escape paths.",
+    "must_show": [
+      "muxboard",
+      "Fleets",
+      "Choose a saved fleet.",
+      "triage",
+      "review",
+      "Enter load"
+    ],
+    "must_not_show": [
+      "load next fleet",
+      "No saved groups",
+      "group triage",
+      "target panes"
+    ],
+    "footer_must_show": [
+      "? help",
+      "J/K choose",
+      "Enter load",
+      "Esc close"
+    ],
+    "max_boxed_lines": 8
+  },
+  {
+    "file": "help_overlay.txt",
+    "journey": "Ask for help and get a short, scannable key map.",
+    "protects": "Help must be a task-oriented map, not a duplicated footer dump.",
+    "must_show": [
+      "muxboard",
+      "Help",
+      "Now:",
+      ": reply",
+      "Move:",
+      "Views:",
+      "command center",
+      "start",
+      "Esc close",
+      "Q quit"
+    ],
+    "must_not_show": [
+      "J/K moves",
+      "shows output",
+      "opens Send",
+      "opens more actions",
+      "runs the shown",
+      "Q quits.",
+      "Send: : send text"
+    ],
+    "footer_must_show": [
+      "Esc close",
+      "Q quit"
+    ],
+    "max_boxed_lines": 8
+  },
+  {
+    "file": "narrow_selected_waiting_panel.txt",
+    "journey": "Triage a waiting agent on a narrow terminal.",
+    "protects": "Narrow triage must preserve selected item, blocker, action, and send path.",
+    "must_show": [
+      "muxboard",
+      "Fleet",
+      "Details",
+      "Action: : reply",
+      "? help"
+    ],
+    "must_not_show": [
+      "NEXT=",
+      "STATUS=",
+      "Reply: : type",
+      "target",
+      "Selected pane",
+      "unknown",
+      " unk"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Enter output",
+      "G show",
+      ": reply"
+    ],
+    "max_boxed_lines": 9
+  },
+  {
+    "file": "output_overlay.txt",
+    "journey": "Inspect distilled output without protocol noise.",
+    "protects": "Output must spend space on distilled useful text before metadata or chrome.",
+    "must_show": [
+      "muxboard",
+      "Output",
+      "Summary",
+      "? help"
+    ],
+    "must_not_show": [
+      "K older/J newer",
+      "NEXT=",
+      "STATUS=",
+      "Updated: no output yet",
+      "Latest: no output yet",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "J/K move",
+      "Esc back"
+    ],
+    "max_boxed_lines": 8
+  },
+  {
+    "file": "opened_output_overlay.txt",
+    "journey": "Open Output from the first screen and immediately scroll the layer just opened.",
+    "protects": "The Enter Output journey must show a stable Output layer that spends scarce rows on Latest output, K older/J newer scrolling, and Esc returning to Fleet without a scroll trap.",
+    "must_show": [
+      "muxboard",
+      "Output",
+      "Latest",
+      "Running just ci",
+      "K older/J newer",
+      "Esc back"
+    ],
+    "must_not_show": [
+      "J/K move",
+      "NEXT=",
+      "STATUS=",
+      "Updated: no output yet",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      "K older/J newer",
+      "Esc back"
+    ],
+    "max_boxed_lines": 12
+  },
+  {
+    "file": "overview_attention_overlay.txt",
+    "journey": "See what needs you and the next useful action.",
+    "protects": "Command Center must answer what needs you and what the next safe action is.",
+    "must_show": [
+      "muxboard",
+      "Command Center",
+      "needs you",
+      "Action: : reply",
+      "Target:",
+      "Queue",
+      "? help"
+    ],
+    "must_not_show": [
+      "next nothing waiting",
+      "attention 1 wait",
+      "target panes",
+      "show prompt",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      ": reply",
+      "Esc back",
+      "G show"
+    ],
+    "max_boxed_lines": 10
+  },
+  {
+    "file": "multi_attention_command_center.txt",
+    "journey": "Triage a fleet with more waiting agents than the Command Center can list.",
+    "protects": "Command Center must make the attention queue count and hidden waiting agents visible.",
+    "must_show": [
+      "muxboard",
+      "Command Center",
+      "8 need you",
+      "Action: A continue",
+      "Needs you: 8 waiting",
+      "Queue (8)",
+      "+ 2 more need you: continue",
+      "Lanes",
+      "? help"
+    ],
+    "must_not_show": [
+      "NEXT=",
+      "STATUS=",
+      "unknown",
+      "Queue (0)",
+      "All clear.",
+      "agent-6",
+      "agent-7"
+    ],
+    "footer_must_show": [
+      "? help",
+      "A continue",
+      "Esc back",
+      "G show"
+    ],
+    "max_boxed_lines": 16
+  },
+  {
+    "file": "mixed_fleet_dashboard.txt",
+    "journey": "Open muxboard to a mixed fleet and immediately see who needs you, who is working, who is quiet, and what is still checking.",
+    "protects": "The first screen must distinguish waiting agents, active work, idle shells, and checking panes without prompt noise or repeated status filler.",
+    "must_show": [
+      "muxboard",
+      "Fleet",
+      "Details",
+      "1 needs you, 1 working",
+      "needs you: network access",
+      "codex run cargo test",
+      "quiet zsh",
+      "demo/pending  checking",
+      "Action: : reply",
+      "? help"
+    ],
+    "must_not_show": [
+      "2 working",
+      "working zsh",
+      "checking checking",
+      "NEXT=",
+      "STATUS=",
+      "unknown",
+      " unk"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Enter output",
+      "G show",
+      ": reply"
+    ],
+    "max_boxed_lines": 14
+  },
+  {
+    "file": "mixed_fleet_after_moving_to_checking.txt",
+    "journey": "Move through a mixed fleet with J until a checking pane is selected.",
+    "protects": "Fleet movement must update the selected command card without carrying stale reply hints, empty output detours, unknown labels, or prompt noise from the waiting pane.",
+    "must_show": [
+      "muxboard",
+      "Fleet",
+      "Details",
+      ">+ demo/pending  checking",
+      "State: Checking",
+      "Action: G show in tmux",
+      "1 needs you, 1 working",
+      "G show"
+    ],
+    "must_not_show": [
+      ": reply",
+      "Enter output",
+      "Output",
+      "unknown",
+      "NEXT=",
+      "STATUS=",
+      "checking checking"
+    ],
+    "footer_must_show": [
+      "? help",
+      "J/K move",
+      "G show"
+    ],
+    "max_boxed_lines": 14
+  },
+  {
+    "file": "command_center_from_working_selection.txt",
+    "journey": "Open Command Center while a working agent is selected and another agent needs attention.",
+    "protects": "Command Center must keep attention first without making the selected working pane look like the action target.",
+    "must_show": [
+      "muxboard",
+      "Command Center",
+      "Action: : reply to demo / approval",
+      "Needs you: 1 waiting",
+      "Working: 1 agent",
+      "Selected: demo / build",
+      "Queue",
+      "reply to demo / approval",
+      "G show"
+    ],
+    "must_not_show": [
+      "Action: G show waiting demo / approval",
+      "Action: G show demo / approval",
+      "Target: demo / build",
+      "NEXT=",
+      "STATUS=",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "? help",
+      ": reply",
+      "G show",
+      "Esc back"
+    ],
+    "max_boxed_lines": 11
+  },
+  {
+    "file": "working_agent_dashboard.txt",
+    "journey": "Open muxboard to one working agent and immediately see current work, recent output, and the safe next action.",
+    "protects": "The working-agent first screen must summarize progress before raw output while keeping Enter output and G show obvious.",
+    "must_show": [
+      "muxboard",
+      "Fleet",
+      "Details",
+      "1 working",
+      "codex Checking command center queue",
+      "State: Running",
+      "Now: Checking command center queue overflow",
+      "Output",
+      "Enter output"
+    ],
+    "must_not_show": [
+      "needs you",
+      "NEXT=",
+      "STATUS=",
+      "unknown",
+      "No output yet",
+      "Updated: no output yet"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Enter output",
+      "G show"
+    ],
+    "max_boxed_lines": 14
+  },
+  {
+    "file": "start_agent_overlay.txt",
+    "journey": "Start a new agent beside the selected pane without leaving muxboard.",
+    "protects": "Start Agent must make destination, folder, command, preset recovery, and cancel path visible.",
+    "must_show": [
+      "muxboard",
+      "Start agent",
+      "In: demo / agents",
+      "Folder:",
+      "Command: codex",
+      "Tab preset",
+      "Enter start"
+    ],
+    "must_not_show": [
+      "launch agent pane",
+      "target panes",
+      "staged",
+      "unknown"
+    ],
+    "footer_must_show": [
+      "Tab preset",
+      "Enter start",
+      "Esc cancel"
+    ],
+    "max_boxed_lines": 9
+  },
+  {
+    "file": "wide_selected_waiting_panel.txt",
+    "journey": "Triage a waiting agent with full-width Fleet and Details.",
+    "protects": "Wide triage must show hierarchy, blocker, action, output, and timestamp without clutter.",
+    "must_show": [
+      "muxboard",
+      "Fleet",
+      "Details",
+      "Action: : reply",
+      "? help",
+      "Enter output"
+    ],
+    "must_not_show": [
+      "NEXT=",
+      "STATUS=",
+      "Reply: : type",
+      "target",
+      "Selected pane",
+      "unknown",
+      " unk"
+    ],
+    "footer_must_show": [
+      "? help",
+      "Enter output",
+      "G show"
+    ],
+    "max_boxed_lines": 14
+  }
+]

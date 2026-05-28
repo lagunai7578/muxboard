@@ -1,0 +1,98 @@
+[
+  {
+    "name": "partial_chunks_until_newline",
+    "chunks": [
+      "hello",
+      " world\nsecond line\n"
+    ],
+    "expected_output": [
+      "hello world",
+      "second line"
+    ],
+    "expected_partial": "",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "carriage_return_overwrite",
+    "chunks": [
+      "loading",
+      "\rready\n"
+    ],
+    "expected_output": [
+      "ready"
+    ],
+    "expected_partial": "",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "waiting_prompt_stays_visible_without_newline",
+    "chunks": [
+      "Continue? [y/n]"
+    ],
+    "expected_output": [],
+    "expected_partial": "Continue? [y/n]",
+    "expected_visible_partial": "Continue? [y/n]"
+  },
+  {
+    "name": "single_character_echo_stays_hidden",
+    "chunks": [
+      "c"
+    ],
+    "expected_output": [],
+    "expected_partial": "c",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "carriage_return_provider_status_survives_as_complete_line",
+    "chunks": [
+      "Working on plan",
+      "\rSTATUS=waiting | BLOCKER=approval | NEXT=approve\n"
+    ],
+    "expected_output": [
+      "STATUS=waiting | BLOCKER=approval | NEXT=approve"
+    ],
+    "expected_partial": "",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "backspace_repaired_provider_event",
+    "chunks": [
+      "question.askedd\b\n"
+    ],
+    "expected_output": [
+      "question.asked"
+    ],
+    "expected_partial": "",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "split_json_provider_event_survives_chunking",
+    "chunks": [
+      "{\"type\":\"permission.",
+      "asked\",\"properties\":{\"pattern\":\"bash\"}}\n"
+    ],
+    "expected_output": [
+      "{\"type\":\"permission.asked\",\"properties\":{\"pattern\":\"bash\"}}"
+    ],
+    "expected_partial": "",
+    "expected_visible_partial": null
+  },
+  {
+    "name": "long_tool_partial_stays_visible",
+    "chunks": [
+      "Tool WebFetch running for 45s while reading provider docs"
+    ],
+    "expected_output": [],
+    "expected_partial": "Tool WebFetch running for 45s while reading provider docs",
+    "expected_visible_partial": "Tool WebFetch running for 45s while reading provider docs"
+  },
+  {
+    "name": "claude_unicode_tool_partial_stays_visible",
+    "chunks": [
+      "Tool Bash running for 3s…"
+    ],
+    "expected_output": [],
+    "expected_partial": "Tool Bash running for 3s…",
+    "expected_visible_partial": "Tool Bash running for 3s…"
+  }
+]

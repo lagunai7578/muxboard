@@ -1,0 +1,559 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tmux_get_option() {
+    tmux show-option -gqv "$1" 2>/dev/null || true
+}
+
+tmux_option_or_default() {
+    local option="$1"
+    local default="$2"
+    local value
+
+    value="$(tmux_get_option "$option")"
+    printf "%s" "${value:-$default}"
+}
+
+enabled() {
+    local normalized
+
+    normalized="$(printf "%s" "${1:-}" | tr "[:upper:]" "[:lower:]")"
+    case "$normalized" in
+        0 | false | off | no) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+lower_value() {
+    printf "%s" "$1" | tr "[:upper:]" "[:lower:]"
+}
+
+shell_quote() {
+    printf "%q" "$1"
+}
+
+message() {
+    tmux display-message "muxboard: $*"
+}
+
+parse_args() {
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --preset)
+                shift
+                if [ "$#" -eq 0 ] || [ -z "$1" ]; then
+                    message "--preset requires center, drawer, top, bottom, left, right, dock, window, or split"
+                    exit 1
+                fi
+                preset_override="$(lower_value "$1")"
+                ;;
+            --preset=*)
+                preset_override="$(lower_value "${1#--preset=}")"
+                ;;
+            --drawer | --quick-drawer)
+                preset_override="drawer"
+                ;;
+            --toggle-peek)
+                preset_override="drawer"
+                peek_toggle="1"
+                ;;
+            *)
+                message "unknown argument '$1'"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+}
+
+supports_popup() {
+    tmux list-commands 2>/dev/null | awk '{print $1}' | grep -qx "display-popup"
+}
+
+supports_full_size_split() {
+    tmux list-commands split-window 2>/dev/null | grep -Eq 'split-window.*\[-[A-Za-z]*f[A-Za-z]*\]'
+}
+
+current_window_id() {
+    tmux display-message -p "#{window_id}" 2>/dev/null || true
+}
+
+current_client_pid() {
+    tmux display-message -p "#{client_pid}" 2>/dev/null || true
+}
+
+tmux_prefix_key() {
+    tmux_option_or_default "prefix" "C-b"
+}
+
+tmux_prefix2_key() {
+    local prefix2
+
+    prefix2="$(tmux_get_option "prefix2")"
+    case "$(lower_value "$prefix2")" in
+        "" | none) return ;;
+        *) printf "%s" "$prefix2" ;;
+    esac
+}
+
+peek_toggle_key() {
+    tmux_option_or_default "@muxboard-drawer-key" "P"
+}
+
+peek_option_name() {
+    local client_pid="$1"
+
+    if [[ "$client_pid" =~ ^[0-9]+$ ]]; then
+        printf "@muxboard_peek_%s" "$client_pid"
+    else
+        printf "@muxboard_peek_default"
+    fi
+}
+
+peek_is_open() {
+    local peek_option="$1"
+
+    [ "$(tmux_get_option "$peek_option")" = "1" ]
+}
+
+close_existing_peek() {
+    local peek_option="$1"
+
+    tmux display-popup -C 2>/dev/null || true
+    tmux set-option -gu "$peek_option" 2>/dev/null || true
+}
+
+existing_dock_pane() {
+    local window_id
+
+    window_id="$(current_window_id)"
+    if [ -z "$window_id" ]; then
+        return
+    fi
+
+    tmux list-panes -t "$window_id" -F "#{pane_id}	#{@muxboard_dock}" 2>/dev/null \
+        | awk -F "\t" '$2 == "1" { print $1; exit }'
+}
+
+close_existing_dock() {
+    local pane_id
+
+    pane_id="$(existing_dock_pane)"
+    if [ -z "$pane_id" ]; then
+        return 1
+    fi
+
+    tmux kill-pane -t "$pane_id"
+}
+
+selected_start_directory() {
+    local configured
+    configured="$(tmux_get_option "@muxboard-start-directory")"
+    if [ -n "$configured" ]; then
+        printf "%s" "$configured"
+        return
+    fi
+
+    tmux display-message -p "#{pane_current_path}" 2>/dev/null || pwd
+}
+
+safe_start_directory() {
+    local start_dir="$1"
+
+    if [ -d "$start_dir" ]; then
+        printf "%s" "$start_dir"
+    else
+        printf "%s" "${HOME:-/}"
+    fi
+}
+
+command_line() {
+    local start_dir="$1"
+    local command_value="$2"
+    local extra_args="$3"
+    local close_after_jump="$4"
+    local quoted_start_dir
+    local inner_command
+
+    quoted_start_dir="$(shell_quote "$start_dir")"
+    inner_command="$command_value"
+    if [ -n "$extra_args" ]; then
+        inner_command="$inner_command $extra_args"
+    fi
+    printf "cd %s && exec env MUXBOARD_CLOSE_AFTER_JUMP=%s sh -lc %s" "$quoted_start_dir" "$close_after_jump" "$(shell_quote "$inner_command")"
+}
+
+peek_command_line() {
+    local start_dir="$1"
+    local command_value="$2"
+    local extra_args="$3"
+    local close_after_jump="$4"
+    local peek_option="$5"
+    local prefix_key="$6"
+    local prefix2_key="$7"
+    local drawer_key="$8"
+    local quoted_start_dir
+    local cleanup
+    local inner_command
+
+    quoted_start_dir="$(shell_quote "$start_dir")"
+    cleanup="tmux set-option -gu $peek_option >/dev/null 2>&1 || true"
+    inner_command="$command_value"
+    if [ -n "$extra_args" ]; then
+        inner_command="$inner_command $extra_args"
+    fi
+    printf "cd %s && trap %s EXIT HUP INT TERM && env MUXBOARD_CLOSE_AFTER_JUMP=%s MUXBOARD_TMUX_PEEK_TOGGLE=1 MUXBOARD_TMUX_PEEK_PREFIX=%s MUXBOARD_TMUX_PEEK_PREFIX2=%s MUXBOARD_TMUX_PEEK_KEY=%s sh -lc %s" \
+        "$quoted_start_dir" "$(shell_quote "$cleanup")" "$close_after_jump" "$(shell_quote "$prefix_key")" "$(shell_quote "$prefix2_key")" "$(shell_quote "$drawer_key")" "$(shell_quote "$inner_command")"
+}
+
+resolve_open_settings() {
+    local preset
+    local explicit_close
+
+    if [ -n "${preset_override:-}" ]; then
+        preset="$(lower_value "$preset_override")"
+    else
+        preset="$(lower_value "$(tmux_get_option "@muxboard-open-preset")")"
+    fi
+    mode="$(lower_value "$(tmux_get_option "@muxboard-open-mode")")"
+    popup_placement="$(lower_value "$(tmux_get_option "@muxboard-popup-placement")")"
+    popup_width="$(tmux_get_option "@muxboard-popup-width")"
+    popup_height="$(tmux_get_option "@muxboard-popup-height")"
+    explicit_close="$(tmux_get_option "@muxboard-close-after-jump")"
+    close_after_jump="$explicit_close"
+
+    case "$preset" in
+        "")
+            mode="${mode:-popup}"
+            popup_placement="${popup_placement:-center}"
+            popup_width="${popup_width:-90%}"
+            popup_height="${popup_height:-85%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        center)
+            mode="popup"
+            popup_placement="${popup_placement:-center}"
+            popup_width="${popup_width:-90%}"
+            popup_height="${popup_height:-85%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        drawer)
+            mode="popup"
+            popup_placement="${popup_placement:-drawer}"
+            popup_width="${popup_width:-45%}"
+            popup_height="${popup_height:-100%}"
+            close_after_jump="${close_after_jump:-on}"
+            ;;
+        top)
+            mode="popup"
+            popup_placement="${popup_placement:-top}"
+            popup_width="${popup_width:-100%}"
+            popup_height="${popup_height:-45%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        bottom)
+            mode="popup"
+            popup_placement="${popup_placement:-bottom}"
+            popup_width="${popup_width:-100%}"
+            popup_height="${popup_height:-45%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        left)
+            mode="popup"
+            popup_placement="${popup_placement:-left}"
+            popup_width="${popup_width:-45%}"
+            popup_height="${popup_height:-100%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        right)
+            mode="popup"
+            popup_placement="${popup_placement:-right}"
+            popup_width="${popup_width:-45%}"
+            popup_height="${popup_height:-100%}"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        dock)
+            mode="dock"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        window)
+            mode="window"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        split)
+            mode="split"
+            close_after_jump="${close_after_jump:-off}"
+            ;;
+        *)
+            message "unknown @muxboard-open-preset '$preset'; use center, drawer, top, bottom, left, right, dock, window, or split"
+            exit 1
+            ;;
+    esac
+
+    if enabled "$close_after_jump"; then
+        close_after_jump="1"
+    else
+        close_after_jump="0"
+    fi
+}
+
+resolve_popup_position() {
+    case "$popup_placement" in
+        center)
+            popup_x="C"
+            popup_y="C"
+            ;;
+        drawer)
+            popup_x="R"
+            popup_y="0"
+            ;;
+        top)
+            popup_x="C"
+            popup_y="0"
+            ;;
+        bottom)
+            popup_x="C"
+            popup_y="S"
+            ;;
+        left)
+            popup_x="0"
+            popup_y="C"
+            ;;
+        right)
+            popup_x="R"
+            popup_y="C"
+            ;;
+        mouse)
+            popup_x="M"
+            popup_y="M"
+            ;;
+        *)
+            message "unknown @muxboard-popup-placement '$popup_placement'; use center, top, bottom, left, right, or mouse"
+            exit 1
+            ;;
+    esac
+}
+
+select_existing_window() {
+    local window_name="$1"
+    local window_id
+
+    window_id="$(
+        tmux list-windows -F "#{window_id}	#{window_name}" 2>/dev/null \
+            | awk -F "\t" -v name="$window_name" '$2 == name { print $1; exit }'
+    )"
+
+    if [ -n "$window_id" ]; then
+        tmux select-window -t "$window_id"
+        return 0
+    fi
+
+    return 1
+}
+
+open_window() {
+    local start_dir="$1"
+    local command="$2"
+    local window_name
+    local reuse
+
+    window_name="$(tmux_option_or_default "@muxboard-window-name" "muxboard")"
+    reuse="$(tmux_option_or_default "@muxboard-reuse-window" "on")"
+
+    if enabled "$reuse" && select_existing_window "$window_name"; then
+        return
+    fi
+
+    tmux new-window -n "$window_name" -c "$start_dir" "$command"
+}
+
+open_split() {
+    local start_dir="$1"
+    local command="$2"
+    local percent_default="${3:-45}"
+    local direction_default="${4:-horizontal}"
+    local split_percent
+    local split_direction
+    local split_flag
+
+    split_percent="$(tmux_option_or_default "@muxboard-split-percent" "$percent_default")"
+    if [[ ! "$split_percent" =~ ^[0-9]+$ ]] || [ "$split_percent" -lt 5 ] || [ "$split_percent" -gt 95 ]; then
+        split_percent="$percent_default"
+    fi
+
+    split_direction="$(lower_value "$(tmux_option_or_default "@muxboard-split-direction" "$direction_default")")"
+    case "$split_direction" in
+        vertical | v) split_flag="-v" ;;
+        *) split_flag="-h" ;;
+    esac
+
+    tmux split-window "$split_flag" -l "${split_percent}%" -c "$start_dir" "$command"
+}
+
+open_dock() {
+    local start_dir="$1"
+    local command="$2"
+    local dock_width
+    local dock_percent
+    local dock_size_flag
+    local dock_size_value
+    local dock_side
+    local before_flag
+    local pane_id
+    local window_width
+
+    dock_width="$(tmux_get_option "@muxboard-dock-width")"
+    if [[ "$dock_width" =~ ^[0-9]+$ ]] && [ "$dock_width" -ge 20 ] && [ "$dock_width" -le 200 ]; then
+        dock_size_flag="-l"
+        dock_size_value="$dock_width"
+    else
+        dock_percent="$(tmux_get_option "@muxboard-dock-percent")"
+        if [[ "$dock_percent" =~ ^[0-9]+$ ]] && [ "$dock_percent" -ge 5 ] && [ "$dock_percent" -le 95 ]; then
+            dock_size_flag="-l"
+            dock_size_value="${dock_percent}%"
+        else
+            window_width="$(tmux display-message -p "#{window_width}" 2>/dev/null || true)"
+            if [[ "$window_width" =~ ^[0-9]+$ ]] && [ "$window_width" -ge 60 ]; then
+                if [ "$window_width" -ge 220 ]; then
+                    dock_size_value="72"
+                elif [ "$window_width" -ge 180 ]; then
+                    dock_size_value="64"
+                elif [ "$window_width" -ge 120 ]; then
+                    dock_size_value="52"
+                else
+                    dock_size_value="$((window_width * 45 / 100))"
+                fi
+                if [ "$dock_size_value" -lt 40 ] && [ "$window_width" -ge 88 ]; then
+                    dock_size_value="40"
+                fi
+                if [ "$dock_size_value" -gt 72 ]; then
+                    dock_size_value="72"
+                fi
+                if [ "$dock_size_value" -gt $((window_width - 32)) ]; then
+                    dock_size_value="$((window_width - 32))"
+                fi
+                dock_size_flag="-l"
+            else
+                dock_size_flag="-l"
+                dock_size_value="38%"
+            fi
+        fi
+    fi
+
+    dock_side="$(lower_value "$(tmux_option_or_default "@muxboard-dock-side" "left")")"
+    case "$dock_side" in
+        right | r) before_flag="" ;;
+        *) before_flag="-b" ;;
+    esac
+
+    if ! supports_full_size_split; then
+        message "full-window dock requires tmux split-window -f; opening a raw split instead"
+        tmux split-window -h -l "$dock_size_value" -c "$start_dir" "$command"
+        return
+    fi
+
+    if [ -n "$before_flag" ]; then
+        pane_id="$(tmux split-window -P -F "#{pane_id}" -f -h "$before_flag" "$dock_size_flag" "$dock_size_value" -c "$start_dir" "$command")"
+    else
+        pane_id="$(tmux split-window -P -F "#{pane_id}" -f -h "$dock_size_flag" "$dock_size_value" -c "$start_dir" "$command")"
+    fi
+    tmux set-option -p -t "$pane_id" @muxboard_dock 1 2>/dev/null || true
+    tmux select-pane -t "$pane_id" -T "muxboard" 2>/dev/null || true
+}
+
+main() {
+    local command_value
+    local extra_args
+    local start_dir
+    local command
+    local mode
+    local popup_placement
+    local popup_width
+    local popup_height
+    local popup_x
+    local popup_y
+    local close_after_jump
+    local split_percent_default
+    local split_direction_default
+    local preset_override
+    local peek_toggle
+    local peek_client_pid
+    local peek_option
+    local prefix_key
+    local prefix2_key
+    local drawer_key
+
+    preset_override=""
+    peek_toggle="0"
+    parse_args "$@"
+    command_value="$(tmux_option_or_default "@muxboard-command" "muxboard")"
+    extra_args="$(tmux_get_option "@muxboard-extra-args")"
+
+    split_percent_default="45"
+    split_direction_default="horizontal"
+    resolve_open_settings
+    if [ "$mode" = "dock" ] && close_existing_dock; then
+        return
+    fi
+    if [ "$mode" = "popup" ] && [ "$peek_toggle" = "1" ]; then
+        peek_client_pid="$(current_client_pid)"
+        peek_option="$(peek_option_name "$peek_client_pid")"
+        if peek_is_open "$peek_option"; then
+            close_existing_peek "$peek_option"
+            return
+        fi
+    fi
+
+    if [ "$command_value" = "muxboard" ] && ! command -v muxboard >/dev/null 2>&1; then
+        message "muxboard command not found; install muxboard or set @muxboard-command"
+        exit 1
+    fi
+
+    start_dir="$(safe_start_directory "$(selected_start_directory)")"
+    if [ "$mode" = "popup" ] && [ "$peek_toggle" = "1" ]; then
+        prefix_key="$(tmux_prefix_key)"
+        prefix2_key="$(tmux_prefix2_key)"
+        drawer_key="$(peek_toggle_key)"
+        command="$(peek_command_line "$start_dir" "$command_value" "$extra_args" "$close_after_jump" "$peek_option" "$prefix_key" "$prefix2_key" "$drawer_key")"
+    else
+        command="$(command_line "$start_dir" "$command_value" "$extra_args" "$close_after_jump")"
+    fi
+
+    case "$mode" in
+        popup)
+            if supports_popup; then
+                resolve_popup_position
+                if [ "$peek_toggle" = "1" ]; then
+                    tmux set-option -gq "$peek_option" "1"
+                    if ! tmux display-popup -d "$start_dir" -x "$popup_x" -y "$popup_y" -w "$popup_width" -h "$popup_height" -E "$command"; then
+                        tmux set-option -gu "$peek_option" 2>/dev/null || true
+                        exit 1
+                    fi
+                else
+                    tmux display-popup -d "$start_dir" -x "$popup_x" -y "$popup_y" -w "$popup_width" -h "$popup_height" -E "$command"
+                fi
+            else
+                if [ "$peek_toggle" = "1" ]; then
+                    tmux set-option -gu "$peek_option" 2>/dev/null || true
+                fi
+                message "popup unavailable; opening a muxboard window"
+                open_window "$start_dir" "$command"
+            fi
+            ;;
+        window)
+            open_window "$start_dir" "$command"
+            ;;
+        split)
+            open_split "$start_dir" "$command" "$split_percent_default" "$split_direction_default"
+            ;;
+        dock)
+            open_dock "$start_dir" "$command"
+            ;;
+        *)
+            message "unknown @muxboard-open-mode '$mode'; use popup, window, split, or set @muxboard-open-preset"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

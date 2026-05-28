@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v tmux >/dev/null 2>&1; then
+    exit 0
+fi
+
+session="${1:-}"
+if [ -z "$session" ]; then
+    session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+fi
+
+normalize_state() {
+    local value
+    value="$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$value" in
+        running | run | working | thinking | tool-running | tool_running) printf "running" ;;
+        waiting | wait | needs-input | needs_input | input-required | input_required | approval | blocked | ask-user | ask_user) printf "waiting" ;;
+        done | complete | completed | finished | success | stop) printf "done" ;;
+        error | failed | failure | panic) printf "error" ;;
+        stuck | stale | interrupted | hung) printf "stuck" ;;
+        idle | quiet) printf "idle" ;;
+        off | clear | none | "") printf "off" ;;
+        *) return 1 ;;
+    esac
+}
+
+is_seen_false() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        0 | false | no | off | seen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_unseen_true() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        1 | true | yes | on | unseen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+compact_agent_label() {
+    local value label
+    value="$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")"
+    label="$(printf "%s" "$value" \
+        | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[[:space:]]+/-/g; s/[^[:alnum:]_.-]//g; s/-+/-/g; s/^-//; s/-$//' \
+        | cut -c 1-18)"
+    case "$label" in
+        "" | agent | default) return 1 ;;
+        *) printf "%s" "$label" ;;
+    esac
+}
+
+add_status_count() {
+    local kind="$1"
+    local agent="$2"
+    local label
+
+    case "$kind" in
+        attention)
+            attention=$((attention + 1))
+            if [ "$attention" -eq 1 ] && label="$(compact_agent_label "$agent")"; then
+                attention_agent="$label"
+            else
+                attention_agent=""
+            fi
+            ;;
+        running)
+            running=$((running + 1))
+            if [ "$running" -eq 1 ] && label="$(compact_agent_label "$agent")"; then
+                running_agent="$label"
+            else
+                running_agent=""
+            fi
+            ;;
+        done)
+            done=$((done + 1))
+            if [ "$done" -eq 1 ] && label="$(compact_agent_label "$agent")"; then
+                done_agent="$label"
+            else
+                done_agent=""
+            fi
+            ;;
+    esac
+}
+
+attention=0
+running=0
+done=0
+attention_agent=""
+running_agent=""
+done_agent=""
+
+while IFS=$'\t' read -r pane_id pane_session; do
+    [ -n "$pane_id" ] || continue
+    if [ -n "$session" ] && [ "$pane_session" != "$session" ]; then
+        continue
+    fi
+    fragment="$(printf "%s" "$pane_id" | sed 's/[^A-Za-z0-9]/_/g')"
+    state="$(tmux show-environment -g "MUXBOARD_AGENT_PANE_${fragment}_STATE" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+    agent="$(tmux show-environment -g "MUXBOARD_AGENT_PANE_${fragment}_AGENT" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+    unseen="$(tmux show-environment -g "MUXBOARD_AGENT_PANE_${fragment}_UNSEEN" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+    if [ -z "$state" ]; then
+        state="$(tmux show-environment -g "TMUX_AGENT_PANE_${pane_id}_STATE" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+        agent="$(tmux show-environment -g "TMUX_AGENT_PANE_${pane_id}_AGENT" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+        unseen="$(tmux show-environment -g "TMUX_AGENT_PANE_${pane_id}_UNSEEN" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+    fi
+    state="$(normalize_state "$state" || true)"
+    case "$state" in
+        waiting) add_status_count attention "$agent" ;;
+        error | stuck)
+            if ! is_seen_false "$unseen"; then
+                add_status_count attention "$agent"
+            fi
+            ;;
+        running) add_status_count running "$agent" ;;
+        done)
+            if is_unseen_true "$unseen"; then
+                add_status_count attention "$agent"
+            else
+                add_status_count done "$agent"
+            fi
+            ;;
+    esac
+done < <(tmux list-panes -a -F '#{pane_id}	#{session_name}' 2>/dev/null || true)
+
+if [ "$attention" -gt 0 ]; then
+    if [ "$attention" -eq 1 ] && [ -n "$attention_agent" ]; then
+        printf "mux ! %s" "$attention_agent"
+    else
+        printf "mux !%s" "$attention"
+    fi
+elif [ "$running" -gt 0 ]; then
+    if [ "$running" -eq 1 ] && [ -n "$running_agent" ]; then
+        printf "mux + %s" "$running_agent"
+    else
+        printf "mux run%s" "$running"
+    fi
+elif [ "$done" -gt 0 ]; then
+    if [ "$done" -eq 1 ] && [ -n "$done_agent" ]; then
+        printf "mux done %s" "$done_agent"
+    else
+        printf "mux done%s" "$done"
+    fi
+fi

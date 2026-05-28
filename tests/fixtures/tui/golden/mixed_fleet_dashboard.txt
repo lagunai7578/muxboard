@@ -1,0 +1,18 @@
+muxboard                                                                  demo/approval  1-4 / 4  1 needs you, 1 working
+┌Fleet | 1-4 / 4 | 1 needs you, 1 working───────────────┐ ┌Details─────────────────────────────────────────────────────┐
+│   Where         Latest                                │ │demo/approval                                               │
+│>! demo/approval needs you: network access             │ │State: Waiting   Tool: Claude Code                          │
+│   demo/build    codex run cargo test                  │ │Blocked: network access                                     │
+│   demo/shell    quiet zsh                             │ │Action: : reply                                             │
+│   demo/pending  checking                              │ │Queue: #1                                                   │
+│                                                       │ │                                                            │
+│                                                       │ │Output                                                      │
+│                                                       │ │  Waiting for leader to approve network access.             │
+│                                                       │ │                                                            │
+│                                                       │ │Updated: 0s ago                                             │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+└───────────────────────────────────────────────────────┘ └────────────────────────────────────────────────────────────┘
+? help  J/K move  : reply  Tab focus  Enter output  G show  Space add  / filter  L layout  . more  Q quit

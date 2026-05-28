@@ -1,0 +1,18 @@
+muxboard                                                                               demo/agents  1-1 / 1  1 needs you
+┌Fleet | 1-1 / 1 | 1 needs you──────────────────────────┐ ┌Details─────────────────────────────────────────────────────┐
+│   Where        Latest                                 │ │demo/agents                                                 │
+│>! demo/agents  needs you: network access              │ │State: Waiting   Tool: Claude Code                          │
+│                                                       │ │Blocked: network access                                     │
+│                                                       │ │Action: : reply                                             │
+│                                                       │ │Queue: #1                                                   │
+│                                                       │ │                                                            │
+│                                                       │ │Output                                                      │
+│                                                       │ │  Waiting for leader to approve network access to           │
+│                                                       │ │  api.example.com                                           │
+│                                                       │ │                                                            │
+│                                                       │ │Updated: 0s ago                                             │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+│                                                       │ │                                                            │
+└───────────────────────────────────────────────────────┘ └────────────────────────────────────────────────────────────┘
+? help  J/K move  : reply  Tab focus  Enter output  G show  Space add  / filter  L layout  . more  Q quit

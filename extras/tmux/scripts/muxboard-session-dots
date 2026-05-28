@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v tmux >/dev/null 2>&1; then
+    exit 0
+fi
+
+current="${1:-}"
+if [ -z "$current" ]; then
+    current="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+fi
+
+tmux_option_or_default() {
+    local option="$1"
+    local default_value="$2"
+    local value
+    value="$(tmux show-option -gqv "$option" 2>/dev/null || true)"
+    if [ -n "$value" ]; then
+        printf "%s" "$value"
+    else
+        printf "%s" "$default_value"
+    fi
+}
+
+normalize_state() {
+    local value
+    value="$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$value" in
+        running | run | working | thinking | tool-running | tool_running) printf "running" ;;
+        waiting | wait | needs-input | needs_input | input-required | input_required | approval | blocked | ask-user | ask_user) printf "waiting" ;;
+        done | complete | completed | finished | success | stop) printf "done" ;;
+        error | failed | failure | panic) printf "error" ;;
+        stuck | stale | interrupted | hung) printf "stuck" ;;
+        idle | quiet) printf "idle" ;;
+        off | clear | none | "") printf "off" ;;
+        *) return 1 ;;
+    esac
+}
+
+is_seen_false() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        0 | false | no | off | seen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_unseen_true() {
+    case "$(printf "%s" "$1" | tr "[:upper:]" "[:lower:]")" in
+        1 | true | yes | on | unseen) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+append_dot() {
+    local symbol="$1"
+    local color="$2"
+    if [ -n "$color" ]; then
+        result="${result}#[fg=${color}]${symbol}"
+        if [ -n "$base_color" ]; then
+            result="${result}#[fg=${base_color}]"
+        else
+            result="${result}#[default]"
+        fi
+    else
+        result="${result}${symbol}"
+    fi
+}
+
+attention_symbol="$(tmux_option_or_default "@muxboard-session-dots-attention" "!")"
+current_symbol="$(tmux_option_or_default "@muxboard-session-dots-current" "*")"
+running_symbol="$(tmux_option_or_default "@muxboard-session-dots-running" "+")"
+quiet_symbol="$(tmux_option_or_default "@muxboard-session-dots-quiet" ".")"
+base_color="$(tmux_option_or_default "@muxboard-session-dots-color" "")"
+attention_color="$(tmux_option_or_default "@muxboard-session-dots-attention-color" "")"
+current_color="$(tmux_option_or_default "@muxboard-session-dots-current-color" "")"
+running_color="$(tmux_option_or_default "@muxboard-session-dots-running-color" "")"
+quiet_color="$(tmux_option_or_default "@muxboard-session-dots-quiet-color" "")"
+
+result=""
+emitted=0
+if [ -n "$base_color" ]; then
+    result="#[fg=${base_color}]"
+fi
+
+while IFS= read -r session; do
+    [ -n "$session" ] || continue
+    emitted=1
+    attention=0
+    running=0
+    event_count=0
+    while IFS= read -r pane_id; do
+        [ -n "$pane_id" ] || continue
+        fragment="$(printf "%s" "$pane_id" | sed 's/[^A-Za-z0-9]/_/g')"
+        state="$(tmux show-environment -g "MUXBOARD_AGENT_PANE_${fragment}_STATE" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+        unseen="$(tmux show-environment -g "MUXBOARD_AGENT_PANE_${fragment}_UNSEEN" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+        if [ -z "$state" ]; then
+            state="$(tmux show-environment -g "TMUX_AGENT_PANE_${pane_id}_STATE" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+            unseen="$(tmux show-environment -g "TMUX_AGENT_PANE_${pane_id}_UNSEEN" 2>/dev/null | sed 's/^[^=]*=//' || true)"
+        fi
+        state="$(normalize_state "$state" || true)"
+        [ -n "$state" ] || continue
+        [ "$state" != "off" ] || continue
+        event_count=$((event_count + 1))
+        case "$state" in
+            waiting) attention=$((attention + 1)) ;;
+            error | stuck)
+                if ! is_seen_false "$unseen"; then
+                    attention=$((attention + 1))
+                fi
+                ;;
+            running) running=$((running + 1)) ;;
+            done)
+                if is_unseen_true "$unseen"; then
+                    attention=$((attention + 1))
+                fi
+                ;;
+        esac
+    done < <(tmux list-panes -s -t "$session" -F '#{pane_id}' 2>/dev/null || true)
+
+    if [ "$attention" -gt 0 ]; then
+        append_dot "$attention_symbol" "$attention_color"
+    elif [ "$session" = "$current" ]; then
+        append_dot "$current_symbol" "$current_color"
+    elif [ "$running" -gt 0 ]; then
+        append_dot "$running_symbol" "$running_color"
+    elif [ "$event_count" -gt 0 ]; then
+        append_dot "$quiet_symbol" "$quiet_color"
+    else
+        append_dot "$quiet_symbol" "$quiet_color"
+    fi
+done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)
+
+if [ "$emitted" = "1" ]; then
+    if [ -n "$base_color" ]; then
+        result="${result}#[default]"
+    fi
+    printf "%s" "$result"
+fi

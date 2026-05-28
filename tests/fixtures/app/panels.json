@@ -1,0 +1,176 @@
+[
+  {
+    "name": "selected_waiting_panel",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "claude",
+        "window_name": "agents",
+        "active": true
+      }
+    ],
+    "runtimes": [
+      {
+        "pane_id": "%1",
+        "lines": [
+          "Waiting for leader to approve network access to api.example.com"
+        ]
+      }
+    ],
+    "panel": "selected",
+    "expected_context_title": "Details",
+    "expect_overlay_absent": true,
+    "expected_contains": [
+      "demo/agents",
+      "State: Waiting   Tool: Claude Code",
+      "Blocked: network access",
+      "Action: : reply",
+      "Output"
+    ]
+  },
+  {
+    "name": "live_tail_empty_state",
+    "context_pane": "tail",
+    "panel": "live_tail",
+    "expected_context_title": "Output",
+    "expected_overlay_title": "Output",
+    "expected_exact": [
+      "demo / agents",
+      "Idle",
+      "No output yet."
+    ]
+  },
+  {
+    "name": "live_tail_with_summary_and_raw_tail",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "node",
+        "window_name": "agents",
+        "active": true
+      }
+    ],
+    "runtimes": [
+      {
+        "pane_id": "%1",
+        "lines": [
+          "codex",
+          "STATUS=running | BLOCKER=none | NEXT=write tests"
+        ]
+      }
+    ],
+    "context_pane": "tail",
+    "panel": "live_tail",
+    "expected_context_title": "Output",
+    "expected_overlay_title": "Output",
+    "expected_contains": [
+      "demo / agents",
+      "Summary",
+      "write tests"
+    ],
+    "expected_exact_absent": [
+      "Latest",
+      "  codex",
+      "  STATUS=running | BLOCKER=none | NEXT=write tests"
+    ],
+    "expected_absent": [
+      "STATUS=running"
+    ]
+  },
+  {
+    "name": "navigator_empty_state",
+    "search_query": "zzz-no-match",
+    "context_pane": "navigator",
+    "panel": "navigator",
+    "expected_context_title": "Browse",
+    "expected_overlay_title": "Browse",
+    "expected_exact": [
+      "No matching panes.",
+      "Action: backspace show all panes"
+    ]
+  },
+  {
+    "name": "overview_panel_with_attention",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "codex",
+        "window_name": "agents",
+        "active": true
+      }
+    ],
+    "runtimes": [
+      {
+        "pane_id": "%1",
+        "lines": [
+          "Waiting for approval. Continue?"
+        ]
+      }
+    ],
+    "context_pane": "control",
+    "panel": "context",
+    "expected_context_title": "Command Center",
+    "expected_overlay_title": "Command Center",
+    "expected_contains": [
+      "Action: : reply to demo / agents",
+      "Needs you: 1 waiting",
+      "Start: + agent in workspace",
+      "Queue",
+      "> reply to demo / agents",
+      "Lanes",
+      "> codex:"
+    ]
+  },
+  {
+    "name": "actions_menu_sections",
+    "action_menu_active": true,
+    "panel": "overlay",
+    "expected_context_title": "More",
+    "expected_overlay_title": "More",
+    "expected_contains": [
+      "To: demo / agents",
+      "View",
+      "Pane",
+      "Settings"
+    ]
+  },
+  {
+    "name": "send_panel_confirm_dispatch",
+    "panes": [
+      {
+        "id": "%1",
+        "command": "codex",
+        "window_name": "agents",
+        "active": true
+      },
+      {
+        "id": "%2",
+        "command": "claude",
+        "window_name": "agents",
+        "active": false
+      }
+    ],
+    "pending_dispatch": {
+      "text": "continue",
+      "expanded": [
+        [
+          "%1",
+          "continue"
+        ],
+        [
+          "%2",
+          "continue"
+        ]
+      ],
+      "target_description": "fleet triage (2 panes)"
+    },
+    "panel": "command",
+    "expected_context_title": "Send",
+    "expected_overlay_title": "Send",
+    "expected_contains": [
+      "To: fleet triage (2 panes)",
+      "Text: continue",
+      "Targets"
+    ]
+  }
+]

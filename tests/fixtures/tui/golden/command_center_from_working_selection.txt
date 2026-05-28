@@ -1,0 +1,20 @@
+muxboard                                                     Command Center  demo/build  1-4 / 4  1 needs you, 1 working
+
+                           ┌Command Center──────────────────────────────────────────────────┐
+                           │ Action: : reply to demo / approval                             │
+                           │ Needs you: 1 waiting                                           │
+                           │ Working: 1 agent                                               │
+                           │ Selected: demo / build                                         │
+                           │ Start: + agent in workspace                                    │
+                           │ Queue                                                          │
+                           │   reply to demo / approval: network access                     │
+                           │                                                                │
+                           │ Lanes                                                          │
+                           │   claude: 1 pane | 1 waiting                                   │
+                           │ > codex: 1 pane | 1 running                                    │
+                           └────────────────────────────────────────────────────────────────┘
+
+
+
+
+? help  : reply  J/K move  Esc back  G show  / filter  L layout  . more  Q quit

@@ -1,0 +1,18 @@
+muxboard                                                                   demo/pending  1-4 / 4  1 needs you, 1 working
+┌Fleet | 1-4 / 4 | 1 needs you, 1 working───────────────────────┐ ┌Details─────────────────────────────────────────────┐
+│   Where         Latest                                        │ │demo/pending                                        │
+│ ! demo/approval needs you: network access                     │ │State: Checking   Tool: Job                         │
+│   demo/build    codex run cargo test                          │ │Action: G show in tmux                              │
+│   demo/shell    quiet zsh                                     │ │Mission: checking                                   │
+│>+ demo/pending  checking                                      │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+│                                                               │ │                                                    │
+└───────────────────────────────────────────────────────────────┘ └────────────────────────────────────────────────────┘
+? help  J/K move  Tab focus  G show  Space add  : send  / filter  L layout  . more  Q quit
