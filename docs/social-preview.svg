@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="muxboard, a tmux command center for AI agents">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#182033"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop offset="0" stop-color="#7aa2f7"/>
+      <stop offset="1" stop-color="#9ece6a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1020" cy="120" r="180" fill="#7aa2f7" opacity="0.10"/>
+  <circle cx="160" cy="560" r="220" fill="#9ece6a" opacity="0.10"/>
+  <g filter="url(#shadow)">
+    <rect x="92" y="74" width="1016" height="482" rx="30" fill="#101826" stroke="#2f3d57" stroke-width="2"/>
+    <rect x="126" y="120" width="948" height="58" rx="16" fill="#172033"/>
+    <text x="154" y="158" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">muxboard</text>
+    <text x="920" y="158" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">3 need you</text>
+    <rect x="126" y="206" width="562" height="266" rx="18" fill="#0d1320" stroke="#2f3d57"/>
+    <rect x="718" y="206" width="356" height="266" rx="18" fill="#0d1320" stroke="#2f3d57"/>
+    <text x="154" y="248" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">Fleet</text>
+    <text x="746" y="248" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">Details</text>
+    <text x="154" y="298" fill="#f7768e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">&gt;! codex     needs you   approve command</text>
+    <text x="154" y="340" fill="#9ece6a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22"> + claude    working     editing tests</text>
+    <text x="154" y="382" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">   server    quiet       build running</text>
+    <text x="746" y="298" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">State: Waiting</text>
+    <text x="746" y="340" fill="#f7768e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">Blocked: approval needed</text>
+    <text x="746" y="382" fill="#9ece6a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">Action: a continue</text>
+    <rect x="126" y="496" width="948" height="34" rx="12" fill="#172033"/>
+    <text x="154" y="520" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">j/k move  Enter output  g show  : send  . more  q quit</text>
+  </g>
+  <text x="92" y="604" fill="url(#accent)" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="34" font-weight="700">A tmux command center for AI agent fleets.</text>
+</svg>

@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a focused improvement to the tmux command center.
+title: "[idea] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: job
+    attributes:
+      label: What job should muxboard help with?
+      description: State the user journey, not only the feature name.
+      placeholder: "Example: I want to see which remote agent needs approval without opening every tmux window."
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: What is hard today?
+      placeholder: "What takes too much thinking, switching, or manual tmux work?"
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would feel obvious?
+      placeholder: "Describe the smallest UI, key, plugin mode, parser, or workflow that would solve it."
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - TUI usability
+        - tmux plugin
+        - agent detection
+        - notifications
+        - docs or onboarding
+        - tests or reliability
+        - other
+    validations:
+      required: true

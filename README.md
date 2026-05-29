@@ -1,10 +1,62 @@
 # muxboard
 
-`muxboard` is a tmux-first command center for panes, agents, and other long-running terminal work.
+[![CI](https://github.com/aanari/muxboard/actions/workflows/ci.yml/badge.svg)](https://github.com/aanari/muxboard/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/aanari/muxboard?sort=semver)](https://github.com/aanari/muxboard/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE-APACHE)
+[![Rust](https://img.shields.io/badge/rust-1.95%2B-orange)](rust-toolchain.toml)
+
+A tmux command center for AI agents, panes, and long-running terminal work.
+
+`muxboard` is the calm "what needs me?" layer above your tmux sessions: scan the fleet, see which agents are stuck, jump to the right pane, reply, broadcast, or keep watching.
 
 ![muxboard demo](docs/muxboard-demo.svg)
 
-What you see first:
+## Why muxboard?
+
+- See every tmux pane and agent in one scan-friendly board.
+- Know which Codex, Claude Code, Opencode, or shell job needs attention.
+- Jump, reply, broadcast, save fleets, and recover without losing tmux context.
+
+Muxboard is local-first and tmux-native. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
+
+## Install
+
+You need `tmux` on the machine where you run `muxboard`.
+
+```bash
+cargo install --git https://github.com/aanari/muxboard --locked
+muxboard
+```
+
+Download release binaries for Linux and macOS from the [latest release](https://github.com/aanari/muxboard/releases/latest).
+
+For local development:
+
+```bash
+cargo install --path . --locked
+cargo run
+```
+
+## tmux plugin
+
+Muxboard ships a TPM-compatible tmux plugin in this repo. Install the binary first, then add:
+
+```tmux
+set -g @plugin 'aanari/muxboard'
+```
+
+Default key: `prefix` + `M`.
+
+Useful presets:
+
+- popup command center: quick overlay, leaves tmux layout untouched,
+- dock: real tmux sidebar pane, best for long control sessions,
+- drawer: temporary right-side overlay, closes cleanly after a jump,
+- window: persistent control room.
+
+See [`docs/tmux-plugin.md`](docs/tmux-plugin.md) for plugin settings, dock/drawer behavior, status widgets, and local-development options.
+
+## What you see first:
 
 - Fleet: every pane, agent, and long-running job in one scan-friendly list.
 - Details: the selected pane's state, blocker, action, and useful output.
@@ -19,79 +71,9 @@ Power stays one layer down until you need it:
 - attention sorting, search, filters, muted alerts, desktop alerts, and terminal bell alerts,
 - recent commands, macros, pane CPU/memory, and XDG-persisted state.
 
-## Install
-
-You need a working `tmux` on the machine where you run `muxboard`.
-
-Install from the public GitHub repo:
-
-```bash
-cargo install --git https://github.com/aanari/muxboard --locked
-```
-
-Or install from a local checkout:
-
-```bash
-cargo install --path . --locked
-```
-
-For local development:
-
-```bash
-cargo run
-```
-
-Then run:
-
-```bash
-muxboard
-```
-
-For day-to-day development, the repo also includes a small `justfile`:
-
-```bash
-just guards
-just contracts
-just test
-just test-live
-just dogfood
-just perf
-just tmux-plugin-check
-just lint
-just ci
-just ci-full
-just release-check
-```
-
-Contributor workflow and expectations live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-Provider drift handling lives in [`docs/provider-drift.md`](docs/provider-drift.md).
-The current test coverage map lives in [`docs/testing-matrix.md`](docs/testing-matrix.md).
-The release checklist lives in [`docs/release.md`](docs/release.md).
-Release notes for 1.0.0 live in [`CHANGELOG.md`](CHANGELOG.md).
-
-To print a ready-to-copy default config or keybinding block:
-
-```bash
-muxboard --print-config-example
-muxboard --print-default-keybindings
-```
-
-## tmux plugin
-
-Muxboard also ships a TPM-compatible plugin in this repo. Install the binary
-first, then add this to `.tmux.conf`:
-
-```tmux
-set -g @plugin 'aanari/muxboard'
-```
-
-The default binding is `prefix` + `M`, which opens muxboard in a popup from the
-selected pane's directory. See [`docs/tmux-plugin.md`](docs/tmux-plugin.md) for
-window, dock, split, ambient agent status, and local-development options.
-
 ## Quick start
 
-The default flow is intentionally small:
+The default path is intentionally small:
 
 - `j` / `k` to move,
 - `Enter` to show the selected pane output while staying in muxboard,
@@ -105,7 +87,7 @@ The default flow is intentionally small:
 - `/` to search,
 - `q` to quit.
 
-Send rules are simple by default:
+Send rules:
 
 - nothing in the send list -> selected pane,
 - one or more panes in the send list -> send list,
@@ -172,14 +154,11 @@ Terminal behavior:
 - UTF-8 terminals get the normal clean bordered UI,
 - `TERM=dumb`, non-UTF-8 locales, or `NO_COLOR` fall back to ASCII borders and plain styling.
 
-Pane CPU/memory is intentionally host-local. It shows CPU and memory for each tmux pane PID on the host where `muxboard` is running. If a pane is an `ssh` client into another machine, the values reflect that local `ssh` process, not the remote workload behind it.
+Pane CPU/memory is host-local. It shows CPU and memory for each tmux pane PID on the host where `muxboard` is running. If a pane is an `ssh` client into another machine, the values reflect that local `ssh` process, not the remote workload behind it.
 
 Structured fleet reports are host-agnostic. If an agent replies with `STATUS=... | BLOCKER=... | NEXT=...`, or emits a heartbeat like `muxboard: status=...; blocker=...; next=...`, muxboard will parse and surface that state in Fleet and Details.
 
-Muxboard also reads conservative local status hints from recent Codex and Claude
-Code transcripts when they map cleanly to an obvious matching tmux pane. It uses
-that native signal for state, thread title, and review attention, while explicit
-tmux bridge hooks still take priority.
+Muxboard also reads conservative local status hints from recent Codex and Claude Code transcripts when they map cleanly to an obvious matching tmux pane. It uses that native signal for state, thread title, and review attention, while explicit tmux bridge hooks still take priority.
 
 ## Product scope
 
@@ -219,6 +198,35 @@ Useful config fields:
 
 For a small custom touch, set `ui_settings.theme.overrides`, for example `"accent": "#4078F2"`, `"warning": "#fc0"`, or `"surface": "24"`. You can also copy `config.example.json` from the repo into your XDG config path.
 
+To print ready-to-copy defaults:
+
+```bash
+muxboard --print-config-example
+muxboard --print-default-keybindings
+```
+
+## Development
+
+```bash
+just guards
+just contracts
+just test
+just test-live
+just dogfood
+just perf
+just tmux-plugin-check
+just lint
+just ci
+just ci-full
+just release-check
+```
+
+Contributor workflow lives in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Provider drift handling lives in [`docs/provider-drift.md`](docs/provider-drift.md).
+The current test coverage map lives in [`docs/testing-matrix.md`](docs/testing-matrix.md).
+The release checklist lives in [`docs/release.md`](docs/release.md).
+Release notes live in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Probe dump
 
 ```bash
@@ -229,4 +237,4 @@ Print the current tmux probe as JSON and exit.
 
 ## License
 
-Licensed under Apache-2.0. See `LICENSE-APACHE`.
+Licensed under Apache-2.0. See [`LICENSE-APACHE`](LICENSE-APACHE).

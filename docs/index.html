@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>muxboard</title>
+  <meta name="description" content="A tmux command center for AI agents, panes, and long-running terminal work.">
+  <meta property="og:title" content="muxboard">
+  <meta property="og:description" content="A tmux command center for AI agent fleets.">
+  <meta property="og:image" content="https://aanari.github.io/muxboard/social-preview.svg">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #101826;
+      --panel-2: #172033;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --line: #2f3d57;
+      --accent: #7aa2f7;
+      --good: #9ece6a;
+      --warn: #f7768e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(122, 162, 247, 0.14), transparent 32rem),
+        radial-gradient(circle at bottom left, rgba(158, 206, 106, 0.12), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 28px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 88px;
+    }
+    .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
+    nav { display: flex; gap: 18px; color: var(--muted); font-size: 14px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+      gap: 44px;
+      align-items: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(48px, 7vw, 84px);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+    .lead {
+      margin: 26px 0 0;
+      max-width: 620px;
+      color: #c9d1d9;
+      font-size: clamp(19px, 2.4vw, 25px);
+    }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 11px 18px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 650;
+    }
+    .button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .terminal {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(16, 24, 38, 0.86);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+    .terminal img { display: block; width: 100%; height: auto; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre {
+      margin: 28px 0 0;
+      padding: 18px;
+      overflow: auto;
+      background: #090d15;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      color: #c9d1d9;
+    }
+    section { margin: 90px 0 0; }
+    h2 { margin: 0 0 18px; font-size: 32px; letter-spacing: -0.03em; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(16, 24, 38, 0.72);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); }
+    .callout {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(122, 162, 247, 0.16), rgba(158, 206, 106, 0.10));
+    }
+    footer {
+      margin: 100px 0 30px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    @media (max-width: 900px) {
+      header { margin-bottom: 52px; }
+      nav { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .wrap { padding: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">muxboard</div>
+      <nav aria-label="Primary">
+        <a href="https://github.com/aanari/muxboard">GitHub</a>
+        <a href="https://github.com/aanari/muxboard/releases/latest">Releases</a>
+        <a href="tmux-plugin.html">tmux plugin</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>A command center for tmux agent fleets.</h1>
+          <p class="lead">See every pane, know what needs you, and jump, reply, or broadcast without losing your tmux context.</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/aanari/muxboard">Get muxboard</a>
+            <a class="button" href="https://github.com/aanari/muxboard/releases/latest">Download release</a>
+          </div>
+          <pre><code>cargo install --git https://github.com/aanari/muxboard --locked
+muxboard</code></pre>
+        </div>
+        <div class="terminal">
+          <img src="muxboard-demo.svg" alt="Muxboard showing a fleet list and selected pane details">
+        </div>
+      </section>
+
+      <section class="grid" aria-label="Highlights">
+        <div class="card">
+          <h3>Fleet first</h3>
+          <p>One calm board for Codex, Claude Code, Opencode, shells, and long-running jobs.</p>
+        </div>
+        <div class="card">
+          <h3>tmux-native</h3>
+          <p>Run locally or over SSH. Jump to panes, open a dock, use a popup, or keep a control room window.</p>
+        </div>
+        <div class="card">
+          <h3>Safe control</h3>
+          <p>Review multi-pane sends, save fleets, continue waiting agents, and keep advanced power one layer down.</p>
+        </div>
+      </section>
+
+      <section>
+        <div class="callout">
+          <h2>Not a repo dashboard. Not a chat app.</h2>
+          <p>Muxboard is the missing control layer for terminal work that already lives in tmux. It does not need VCS awareness to make agent fleets easier to operate.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Use it from tmux</h2>
+        <pre><code>set -g @plugin 'aanari/muxboard'</code></pre>
+        <p>Default key: <code>prefix</code> + <code>M</code>. Use popup, dock, drawer, split, or window presets.</p>
+      </section>
+    </main>
+
+    <footer>
+      Apache-2.0. Built with Rust, Ratatui, and tmux.
+    </footer>
+  </div>
+</body>
+</html>

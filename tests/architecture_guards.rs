@@ -401,6 +401,64 @@ fn public_readme_stays_scan_first_and_current() -> TestResult<()> {
 }
 
 #[test]
+fn public_project_surface_stays_release_ready() -> TestResult<()> {
+    let required_files = [
+        ".github/ISSUE_TEMPLATE/bug_report.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
+        ".github/pull_request_template.md",
+        "SECURITY.md",
+        "CODE_OF_CONDUCT.md",
+        "docs/index.html",
+        "docs/social-preview.svg",
+        "docs/demo.md",
+    ];
+
+    for relative in required_files {
+        let path = manifest_path().join(relative);
+        if !path.exists() {
+            return Err(format!("public project surface is missing {}", path.display()).into());
+        }
+    }
+
+    let readme_path = manifest_path().join("README.md");
+    let readme = fs::read_to_string(&readme_path)?;
+    for phrase in [
+        "A tmux command center for AI agents",
+        "Why muxboard?",
+        "Download release",
+        "Default key: `prefix` + `M`",
+        "popup command center",
+        "dock: real tmux sidebar pane",
+        "drawer: temporary right-side overlay",
+    ] {
+        assert_contains(&readme_path, &readme, phrase)?;
+    }
+
+    let pages_path = manifest_path().join("docs/index.html");
+    let pages = fs::read_to_string(&pages_path)?;
+    for phrase in [
+        "A command center for tmux agent fleets.",
+        "cargo install --git https://github.com/aanari/muxboard --locked",
+        "muxboard-demo.svg",
+        "social-preview.svg",
+        "prefix",
+    ] {
+        assert_contains(&pages_path, &pages, phrase)?;
+    }
+
+    let security_path = manifest_path().join("SECURITY.md");
+    let security = fs::read_to_string(&security_path)?;
+    assert_contains(
+        &security_path,
+        &security,
+        "https://github.com/aanari/muxboard/security/advisories/new",
+    )?;
+
+    Ok(())
+}
+
+#[test]
 fn readme_shortcuts_match_generated_default_keybindings() -> TestResult<()> {
     let path = manifest_path().join("README.md");
     let source = fs::read_to_string(&path)?;
@@ -875,7 +933,8 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
         "license = \"Apache-2.0\"",
         "readme = \"README.md\"",
         "repository = \"https://github.com/aanari/muxboard\"",
-        "documentation = \"https://docs.rs/muxboard\"",
+        "homepage = \"https://aanari.github.io/muxboard/\"",
+        "documentation = \"https://aanari.github.io/muxboard/\"",
         "# V1 ships GitHub-first. Remove this only when crates.io publishing is intentional.",
         "publish = false",
         "\"docs/agent-loop-notes.md\"",
