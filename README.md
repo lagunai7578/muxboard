@@ -13,24 +13,19 @@ A tmux command center for AI agents, panes, and long-running terminal work.
 
 ## Try it
 
-You need `tmux` on the machine where you run `muxboard`.
+You need `tmux` on the machine where you run `muxboard`. Download release binaries for Linux and macOS from the [latest release](https://github.com/aanari/muxboard/releases/latest), or install from source:
 
 ```bash
 cargo install --git https://github.com/aanari/muxboard --locked
+```
+
+Run it from any tmux pane:
+
+```bash
 muxboard
 ```
 
-Download release binaries for Linux and macOS from the [latest release](https://github.com/aanari/muxboard/releases/latest).
-
-Want a safe first look? From a checkout, run a synthetic fleet on an isolated tmux socket:
-
-```bash
-just demo-start   # create generic fake panes
-just demo-attach  # explore muxboard
-just demo-stop    # tear it down
-```
-
-The private demo uses generic fake panes. It does not attach to your live tmux server or record real pane output.
+Not in tmux yet? Start tmux first, then run `muxboard`.
 
 ## Why muxboard?
 

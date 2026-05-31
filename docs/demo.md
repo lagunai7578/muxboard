@@ -2,7 +2,7 @@
 
 ![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](muxboard-demo.gif)
 
-The checked-in demo is synthetic. It shows the core loop: scan the fleet, inspect output, act on a waiting agent, and review a multi-pane send.
+The checked-in demo is synthetic. It shows the core loop: scan the fleet, inspect output, continue a waiting agent, review a multi-pane send, and jump back to tmux.
 
 Use this guide when recording a GIF, MP4, asciinema cast, or short launch clip.
 

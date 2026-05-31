@@ -15,40 +15,52 @@ DOCS = ROOT / "docs"
 FRAME_DIR = ROOT / "target" / "demo" / "frames"
 FONTCONFIG_DIR = ROOT / "target" / "demo" / "fontconfig"
 WIDTH = 1200
-HEIGHT = 720
+HEIGHT = 680
 
 COLORS = {
-    "terminal": "#050814",
-    "header": "#0f172a",
-    "panel": "#0b1220",
-    "panel_2": "#111827",
-    "line": "#25324a",
-    "line_hot": "#7aa2f7",
-    "text": "#d7dee9",
-    "muted": "#8fa1b8",
-    "blue": "#93c5fd",
+    "page_top": "#172033",
+    "page_bottom": "#050814",
+    "terminal": "#070b14",
+    "chrome": "#111827",
+    "panel": "#0f172a",
+    "panel_hot": "#152036",
+    "line": "#475569",
+    "line_hot": "#38bdf8",
+    "text": "#f8fafc",
+    "muted": "#cbd5e1",
+    "dim": "#94a3b8",
     "cyan": "#67e8f9",
-    "green": "#86efac",
-    "yellow": "#fde68a",
-    "red": "#fca5a5",
+    "green": "#34d399",
+    "yellow": "#fde047",
+    "red": "#fb7185",
+    "blue": "#93c5fd",
+    "purple": "#c4b5fd",
 }
+
+TEXT_STYLES = {
+    "title": (COLORS["text"], 28, "800"),
+    "subtitle": (COLORS["muted"], 17, "500"),
+    "label": (COLORS["blue"], 18, "800"),
+    "text": (COLORS["text"], 18, "500"),
+    "muted": (COLORS["muted"], 16, "500"),
+    "dim": (COLORS["dim"], 15, "500"),
+    "cyan": (COLORS["cyan"], 18, "600"),
+    "green": (COLORS["green"], 18, "700"),
+    "yellow": (COLORS["yellow"], 18, "700"),
+    "red": (COLORS["red"], 18, "700"),
+    "purple": (COLORS["purple"], 18, "700"),
+}
+
+FLEET_BASE = [
+    (">!", "agents/codex", "needs you", "approval", "red"),
+    (" !", "agents/opencode", "stuck", "retry/skip", "red"),
+    (" *", "agents/claude", "working", "tests", "green"),
+    (" *", "server/api", "quiet", "healthy", "muted"),
+]
 
 
 def e(value: str) -> str:
     return html.escape(value, quote=True)
-
-
-TEXT_STYLES = {
-    "text": (COLORS["text"], 15, "400"),
-    "muted": (COLORS["muted"], 14, "400"),
-    "label": (COLORS["blue"], 15, "700"),
-    "caption": ("#eef2ff", 22, "800"),
-    "smallcap": ("#b8c7dd", 15, "400"),
-    "green": (COLORS["green"], 15, "400"),
-    "yellow": (COLORS["yellow"], 15, "400"),
-    "red": (COLORS["red"], 15, "400"),
-    "cyan": (COLORS["cyan"], 15, "400"),
-}
 
 
 def text(
@@ -74,99 +86,182 @@ def text(
     return f"  <text {' '.join(attrs)}>{e(value)}</text>\n"
 
 
-def panel(x: int, y: int, w: int, h: int, title: str, active: bool = False) -> str:
-    stroke = COLORS["line_hot"] if active else COLORS["line"]
-    width = 3 if active else 1.4
-    glow = ' filter="url(#glow)"' if active else ""
+def rect(x: int, y: int, w: int, h: int, fill: str, stroke: str | None = None, rx: int = 14, width: float = 1.5) -> str:
+    stroke_attrs = "" if stroke is None else f' stroke="{stroke}" stroke-width="{width}"'
+    return f'  <rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{fill}"{stroke_attrs}/>\n'
+
+
+def pill(x: int, y: int, label: str, fill: str, fg: str = "#06111f", w: int | None = None) -> str:
+    width = w if w is not None else 22 + len(label) * 11
     return (
-        f'  <rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" '
-        f'fill="{COLORS["panel"]}" stroke="{stroke}" stroke-width="{width}"{glow}/>'
-        "\n"
-        + text(x + 20, y + 32, title, "label")
+        rect(x, y, width, 34, fill, rx=17)
+        + f'  <text x="{x + width // 2}" y="{y + 23}" text-anchor="middle" '
+        'font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" '
+        f'font-size="16" font-weight="800" fill="{fg}">{e(label)}</text>\n'
     )
 
 
-def frame_svg(step: str, caption: str, active: str, file_name: str) -> str:
-    active_panel = {
-        "command": active == "command",
-        "fleet": active == "fleet",
-        "browse": active == "browse",
-        "details": active == "details",
-        "output": active == "output",
-    }
-    is_send_review = active == "command"
-    fleet_line = "send list   review needed" if is_send_review else "needs you   approval needed"
-    command_action = "Action: Enter confirm" if is_send_review else "Action: a continue"
-    details_action = "Action: Enter sends after review" if is_send_review else "Action: a continue"
-    output_latest = "Review: send to 2 panes" if is_send_review else "Latest: cargo test --all"
+def panel(x: int, y: int, w: int, h: int, title: str, hot: bool = False) -> str:
+    fill = COLORS["panel_hot"] if hot else COLORS["panel"]
+    stroke = COLORS["line_hot"] if hot else COLORS["line"]
+    width = 3 if hot else 1.6
+    return rect(x, y, w, h, fill, stroke, width=width) + text(x + 22, y + 34, title, "label")
 
+
+def fleet_rows(frame: str) -> list[tuple[str, str, str, str, str]]:
+    if frame in {"after_continue", "jump"}:
+        return [
+            (" *", "agents/codex", "working", "approved", "green"),
+            (">!", "agents/opencode", "stuck", "retry/skip", "red"),
+            (" *", "agents/claude", "working", "tests", "green"),
+            (" *", "server/api", "quiet", "healthy", "muted"),
+        ]
+    if frame in {"mark_send", "review_send"}:
+        return [
+            ("+*", "agents/codex", "working", "approved", "cyan"),
+            ("+*", "agents/claude", "working", "tests", "cyan"),
+            (">!", "agents/opencode", "stuck", "retry/skip", "red"),
+            (" *", "server/api", "quiet", "healthy", "muted"),
+        ]
+    return FLEET_BASE
+
+
+def draw_fleet(frame: str, hot: bool) -> str:
+    parts = [panel(44, 158, 518, 396, "Fleet | 1-4 / 9 | 2 need you", hot)]
+    parts.append(text(70, 214, "   Where             Now          Latest", "dim"))
+    y = 254
+    for marker, where, now, latest, klass in fleet_rows(frame):
+        row_fill = "#1f2937" if marker.startswith(">") else "#0f172a"
+        if marker.startswith(">"):
+            parts.append(rect(62, y - 24, 474, 34, row_fill, "#334155", rx=8, width=1))
+        parts.append(text(78, y, f"{marker} {where}", klass))
+        parts.append(text(300, y, now, klass))
+        parts.append(text(424, y, latest, klass))
+        y += 48
+    parts.append(text(70, 510, "+ send list   ! needs you   * active", "dim"))
+    return "".join(parts)
+
+
+def draw_details(frame: str, hot: bool) -> str:
+    title = "Details"
+    parts = [panel(590, 158, 566, 396, title, hot)]
+    if frame in {"after_continue", "jump"}:
+        parts.extend(
+            [
+                text(620, 214, "agents/codex", "text"),
+                text(620, 260, "Sent Enter to agents/codex", "green", 22),
+                text(620, 302, "State: Working", "green"),
+                text(620, 340, "Latest: running approved command", "text"),
+                text(620, 398, "Next waiting: agents/opencode", "red"),
+                text(620, 456, "Muxboard advances the queue without losing your place.", "muted"),
+            ]
+        )
+    elif frame in {"mark_send", "review_send"}:
+        title = "Review send" if frame == "review_send" else "Send list"
+        parts[0] = panel(590, 158, 566, 396, title, hot)
+        parts.extend(
+            [
+                text(620, 214, "Targets", "label"),
+                pill(620, 236, "agents/codex", COLORS["cyan"], w=156),
+                pill(792, 236, "agents/claude", COLORS["cyan"], w=168),
+                text(620, 318, "Command", "label"),
+                rect(620, 336, 484, 56, "#050814", "#334155", rx=10, width=1.4),
+                text(644, 372, "cargo test --all-targets", "text"),
+                text(620, 438, "Enter sends after review. Esc cancels.", "yellow", 20),
+            ]
+        )
+    else:
+        parts.extend(
+            [
+                text(620, 214, "agents/codex", "text"),
+                text(620, 260, "State: Waiting | Tool: Codex", "yellow"),
+                text(620, 302, "Blocked: approval needed", "red"),
+                text(620, 344, "Action: a continue", "yellow", 22),
+                text(620, 408, "Latest", "label"),
+                text(620, 450, "Proposed command: cargo test --all-targets", "text"),
+                text(620, 492, "Press Enter or type command to continue", "muted"),
+            ]
+        )
+    return "".join(parts)
+
+
+def draw_output(hot: bool) -> str:
+    parts = [panel(590, 158, 566, 396, "Output", hot)]
+    parts.extend(
+        [
+            text(620, 214, "agents/codex", "text"),
+            text(620, 260, "STATUS waiting: approval needed", "yellow"),
+            text(620, 302, "Proposed command: cargo test --all-targets", "text"),
+            text(620, 344, "Press Enter or type command to continue", "red"),
+            text(620, 414, "Output opens inside muxboard.", "green", 22),
+            text(620, 458, "Esc returns to the fleet. g jumps to tmux.", "muted"),
+        ]
+    )
+    return "".join(parts)
+
+
+def draw_jump(hot: bool) -> str:
+    parts = [panel(590, 158, 566, 396, "tmux pane", hot)]
+    parts.extend(
+        [
+            text(620, 214, "agents/opencode", "text"),
+            text(620, 260, "$ opencode", "cyan"),
+            text(620, 304, "I need a human decision:", "yellow"),
+            text(620, 348, "1. retry with narrower scope", "text"),
+            text(620, 390, "2. skip and keep reviewing", "text"),
+            text(620, 456, "g jumps to tmux. muxboard keeps watching.", "green", 20),
+        ]
+    )
+    return "".join(parts)
+
+
+def draw_right(frame: str, hot: str) -> str:
+    if frame == "output":
+        return draw_output(hot == "output")
+    if frame == "jump":
+        return draw_jump(hot == "jump")
+    return draw_details(frame, hot == "details")
+
+
+def frame_svg(step: str, caption: str, frame: str, hot: str, keys: list[str], file_name: str) -> str:
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
         f'viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">\n',
         '  <title id="title">muxboard demo</title>\n',
-        '  <desc id="desc">A compact terminal-style preview of muxboard showing Fleet, Details, Command Center, Browse, Output, and safe send review.</desc>\n',
+        '  <desc id="desc">A high-contrast demo of muxboard showing fleet triage, output inspection, continue, send-list review, and tmux jump.</desc>\n',
         '  <defs>\n',
         '    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">\n',
-        '      <stop offset="0" stop-color="#111827"/>\n',
-        '      <stop offset="1" stop-color="#08111f"/>\n',
+        f'      <stop offset="0" stop-color="{COLORS["page_top"]}"/>\n',
+        f'      <stop offset="1" stop-color="{COLORS["page_bottom"]}"/>\n',
         '    </linearGradient>\n',
         '    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">\n',
-        '      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.42"/>\n',
-        '    </filter>\n',
-        '    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">\n',
-        '      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#7aa2f7" flood-opacity="0.36"/>\n',
+        '      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.45"/>\n',
         '    </filter>\n',
         '  </defs>\n',
         f'  <rect width="{WIDTH}" height="{HEIGHT}" fill="url(#page)"/>\n',
-        '  <circle cx="1050" cy="88" r="170" fill="#7aa2f7" opacity="0.10"/>\n',
-        '  <circle cx="80" cy="660" r="210" fill="#9ece6a" opacity="0.10"/>\n',
-        f'  <rect x="18" y="18" width="1164" height="684" rx="24" fill="{COLORS["terminal"]}" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)"/>\n',
-        f'  <rect x="18" y="18" width="1164" height="46" rx="24" fill="{COLORS["header"]}"/>\n',
-        '  <circle cx="46" cy="41" r="7" fill="#f87171"/>\n',
-        '  <circle cx="70" cy="41" r="7" fill="#fbbf24"/>\n',
-        '  <circle cx="94" cy="41" r="7" fill="#34d399"/>\n',
-        text(600, 47, "muxboard  tmux command center", "muted", 14, "middle"),
-        f'  <rect x="42" y="82" width="1116" height="62" rx="14" fill="{COLORS["panel"]}" stroke="{COLORS["line"]}" stroke-width="1.4"/>\n',
-        text(62, 111, step, "caption"),
-        text(62, 132, caption, "smallcap"),
-        text(910, 119, "2 need you, 1 working", "red", 16),
-        panel(42, 162, 300, 170, "Command Center", active_panel["command"]),
-        text(62, 211, "Needs you: 2 waiting", "red"),
-        text(62, 238, "Working: 1 agent", "green"),
-        text(62, 265, command_action, "yellow"),
-        text(62, 292, "Send: review 2 panes", "text"),
-        text(62, 319, "Start: + agent", "muted"),
-        panel(360, 162, 798, 170, "Fleet | 1-4 / 9 | 2 need you", active_panel["fleet"]),
-        text(380, 211, "   Where             Now         Latest", "muted"),
-        text(380, 238, f">! demo/agents      {fleet_line}", "red"),
-        text(380, 265, " * demo/build       working     codex: writing renderer tests", "green"),
-        text(380, 292, " + demo/review      working     opencode: reviewing fixes", "cyan"),
-        text(380, 319, "   demo/server      quiet       health checks green", "text"),
-        panel(42, 352, 300, 270, "Browse", active_panel["browse"]),
-        text(62, 398, "ops:", "text"),
-        text(62, 425, ">* agents (3 panes, h142)", "cyan"),
-        text(62, 452, "   build  (2 panes, h66)", "text"),
-        text(62, 479, "   review (2 panes, h51)", "text"),
-        text(62, 534, "Enter scopes a window.", "muted"),
-        text(62, 561, "Backspace returns.", "muted"),
-        panel(360, 352, 388, 270, "Details", active_panel["details"]),
-        text(380, 398, "demo/agents", "text"),
-        text(380, 425, "State: Waiting | Tool: Claude Code", "yellow"),
-        text(380, 452, "Blocked: approval needed", "red"),
-        text(380, 479, details_action, "yellow"),
-        text(380, 526, "Output", "text"),
-        text(380, 553, "Waiting for approval to continue.", "muted"),
-        panel(770, 352, 388, 270, "Output", active_panel["output"]),
-        text(790, 398, "demo/build", "text"),
-        text(790, 425, "Running | 3s ago", "text"),
-        text(790, 452, "Summary: write renderer tests", "green"),
-        text(790, 479, output_latest, "text"),
-        text(790, 526, "No cloud. No account. No repo scan.", "muted"),
-        f'  <rect x="42" y="645" width="1116" height="32" rx="10" fill="{COLORS["panel_2"]}"/>\n',
-        text(62, 666, "? help  j/k move  Enter output  g show  Space add  : send  / filter  . more  q quit", "muted", 14),
-        f'  <metadata>{e(file_name)}</metadata>\n',
-        '</svg>\n',
+        '  <circle cx="1040" cy="70" r="210" fill="#38bdf8" opacity="0.14"/>\n',
+        '  <circle cx="120" cy="660" r="230" fill="#34d399" opacity="0.11"/>\n',
+        rect(18, 18, 1164, 644, COLORS["terminal"], "#1f2937", rx=26, width=1.6).replace('/>', ' filter="url(#shadow)"/>'),
+        rect(18, 18, 1164, 50, COLORS["chrome"], rx=26),
+        '  <circle cx="48" cy="43" r="7" fill="#f87171"/>\n',
+        '  <circle cx="72" cy="43" r="7" fill="#fbbf24"/>\n',
+        '  <circle cx="96" cy="43" r="7" fill="#34d399"/>\n',
+        text(600, 49, "muxboard  tmux command center", "dim", 15, "middle"),
+        rect(44, 88, 1112, 50, "#101827", "#25324a", rx=14, width=1.4),
+        text(68, 122, step, "title"),
+        text(430, 121, caption, "subtitle"),
+        text(1126, 121, "2 need you, 1 working", "red", 18, "end"),
+        draw_fleet(frame, hot == "fleet"),
+        draw_right(frame, hot),
+        rect(44, 582, 1112, 48, "#101827", "#25324a", rx=14, width=1.4),
     ]
+    x = 68
+    for key in keys:
+        parts.append(pill(x, 589, key, COLORS["yellow"], w=max(72, 28 + len(key) * 12)))
+        x += max(82, 38 + len(key) * 12)
+    parts.append(text(x + 10, 613, "? help   j/k move   Enter output   g show   Space add   : send   q quit", "muted", 15))
+    parts.append(f'  <metadata>{e(file_name)}</metadata>\n')
+    parts.append('</svg>\n')
     return "".join(parts)
 
 
@@ -202,9 +297,9 @@ def render_gif(frame_paths: list[Path], destination: Path) -> None:
     if magick is None:
         raise SystemExit("Install ImageMagick first, for example: brew install imagemagick.")
 
-    command = [magick, "-background", "#0b1020"]
+    command = [magick, "-background", "#050814"]
     for frame in frame_paths:
-        command.extend(["-delay", "130", str(frame)])
+        command.extend(["-delay", "115", str(frame)])
     command.extend(["-loop", "0", "-layers", "Optimize", str(destination)])
     subprocess.run(command, check=True, cwd=ROOT, env=fontconfig_env())
     print(f"Wrote {destination.relative_to(ROOT)}")
@@ -212,22 +307,24 @@ def render_gif(frame_paths: list[Path], destination: Path) -> None:
 
 def main() -> int:
     frames = [
-        ("Scan the fleet", "Every tmux pane, agent, blocker, and latest signal in one calm board.", "fleet"),
-        ("Inspect without switching", "Enter opens useful output while muxboard keeps your place.", "output"),
-        ("Act on what needs you", "The selected pane shows the blocker and the next safe action.", "details"),
-        ("Broadcast safely", "Space marks panes, : drafts a send, Enter confirms after review.", "command"),
+        ("Scan", "see what needs you first", "triage", "fleet", ["j/k"]),
+        ("Inspect", "open output without switching panes", "output", "output", ["Enter", "Esc"]),
+        ("Act", "continue a waiting agent from the board", "after_continue", "details", ["a"]),
+        ("Select", "mark two panes and compose once", "mark_send", "details", ["Space", ":"]),
+        ("Review", "confirm before broadcasting to agents", "review_send", "details", ["Enter", "Esc"]),
+        ("Jump", "show the pane in tmux for full context", "jump", "jump", ["g"]),
     ]
 
     FRAME_DIR.mkdir(parents=True, exist_ok=True)
     frame_paths: list[Path] = []
-    for index, (step, caption, active) in enumerate(frames):
+    for index, (step, caption, frame, hot, keys) in enumerate(frames):
         path = FRAME_DIR / f"muxboard-demo-{index + 1}.svg"
-        write_text(path, frame_svg(step, caption, active, path.name))
+        write_text(path, frame_svg(step, caption, frame, hot, keys, path.name))
         frame_paths.append(path)
 
     write_text(
         DOCS / "muxboard-demo.svg",
-        frame_svg(frames[0][0], frames[0][1], frames[0][2], "muxboard-demo.svg"),
+        frame_svg(frames[0][0], frames[0][1], frames[0][2], frames[0][3], frames[0][4], "muxboard-demo.svg"),
     )
     render_gif(frame_paths, DOCS / "muxboard-demo.gif")
     return 0

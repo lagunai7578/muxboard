@@ -235,12 +235,10 @@ fn public_demo_svg_matches_current_product_language() -> TestResult<()> {
     let required = [
         "Fleet |",
         "Details",
-        "Command Center",
-        "Browse",
-        "Output",
-        "Needs you:",
         "Action:",
         "Latest",
+        "Enter output",
+        "g show",
         "? help",
     ];
     let banned = [
@@ -261,15 +259,31 @@ fn public_demo_svg_matches_current_product_language() -> TestResult<()> {
         assert_contains(&path, &source, phrase)?;
     }
     for phrase in [
-        "width=\"1200\" height=\"720\"",
-        "x=\"18\" y=\"18\" width=\"1164\" height=\"684\"",
-        "Scan the fleet",
-        "Every tmux pane",
+        "width=\"1200\" height=\"680\"",
+        "x=\"18\" y=\"18\" width=\"1164\" height=\"644\"",
+        "Scan",
+        "see what needs you first",
+        "approval",
     ] {
         assert_contains(&path, &source, phrase)?;
     }
     assert_not_contains_any(&path, &source, &banned)?;
     assert_not_contains(&path, &source, "<tspan")?;
+
+    let generator_path = manifest_path().join("scripts/demo-visuals");
+    let generator = fs::read_to_string(&generator_path)?;
+    for phrase in [
+        "Inspect",
+        "Output",
+        "Act",
+        "Select",
+        "Review send",
+        "tmux pane",
+        "Enter sends after review",
+        "g jumps to tmux",
+    ] {
+        assert_contains(&generator_path, &generator, phrase)?;
+    }
 
     Ok(())
 }
@@ -442,13 +456,8 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "Why muxboard?",
         "Try it",
         "Download release",
-        "Want a safe first look?",
-        "isolated tmux socket",
-        "just demo-start",
-        "just demo-attach",
-        "just demo-stop",
-        "generic fake panes",
-        "does not attach to your live tmux server",
+        "Run it from any tmux pane",
+        "Not in tmux yet? Start tmux first",
         "![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](docs/muxboard-demo.gif)",
         "The animation above is synthetic and safe to share",
         "no account, no cloud service, and no repo or worktree inspection",
@@ -460,10 +469,18 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
     ] {
         assert_contains(&readme_path, &readme, phrase)?;
     }
-    for phrase in ["## Development", "## Local development", "## Probe dump"] {
+    for phrase in [
+        "## Development",
+        "## Local development",
+        "## Probe dump",
+        "Want a safe first look?",
+        "just demo-start",
+        "just demo-attach",
+        "just demo-stop",
+    ] {
         assert_not_contains(&readme_path, &readme, phrase)?;
     }
-    assert_gif_dimensions(&manifest_path().join("docs/muxboard-demo.gif"), 1200, 720)?;
+    assert_gif_dimensions(&manifest_path().join("docs/muxboard-demo.gif"), 1200, 680)?;
 
     let pages_path = manifest_path().join("docs/index.html");
     let pages = fs::read_to_string(&pages_path)?;
@@ -476,8 +493,8 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "muxboard-demo.gif",
         "social-preview.png",
         "Watch demo",
-        "Safe first look",
-        "private tmux socket",
+        "Run muxboard from any tmux pane",
+        "synthetic panes",
         "No account, cloud service, or repo scan",
         "docs/demo.md",
         "docs/tmux-plugin.md",
