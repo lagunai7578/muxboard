@@ -8,11 +8,15 @@ Run from a clean tree:
 
 ```bash
 git status --short
+just public-assets
 just release-check
 cargo package --locked --list
 ```
 
-Review the package list for local-only files. It should include source, fixtures, public docs, the demo SVG, and license files. It should not include `.hermes`, `target`, downloaded agent source drops, or local identity files.
+Review the package list for local-only files. It should include source, fixtures,
+public docs, demo SVGs, social-preview PNG, and license files. It should not
+include `.hermes`, `target`, downloaded agent source drops, or local identity
+files.
 
 ## Public repository
 
@@ -23,6 +27,10 @@ just github-preflight
 ```
 
 That check intentionally fails until `origin` points at `aanari/muxboard`, the GitHub repo exists, the repo is public, and the default branch is available.
+
+Keep the repository homepage pointed at GitHub unless the public Pages route has
+been verified end to end. A green Pages build is not enough; owner-level custom
+domains can redirect `github.io` project pages somewhere else.
 
 Create the public repo only after the release check is green and the current branch is the branch you want as `main`:
 

@@ -261,6 +261,7 @@ fn public_demo_svg_matches_current_product_language() -> TestResult<()> {
         assert_contains(&path, &source, phrase)?;
     }
     assert_not_contains_any(&path, &source, &banned)?;
+    assert_not_contains(&path, &source, "<tspan")?;
 
     Ok(())
 }
@@ -411,6 +412,7 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "CODE_OF_CONDUCT.md",
         "docs/index.html",
         "docs/social-preview.svg",
+        "docs/social-preview.png",
         "docs/demo.md",
         "scripts/demo-session",
         "docs/goals/demo-polish.md",
@@ -428,7 +430,17 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
     for phrase in [
         "A tmux command center for AI agents",
         "Why muxboard?",
+        "Try it",
         "Download release",
+        "Want a safe first look?",
+        "isolated tmux socket",
+        "just demo-start",
+        "just demo-attach",
+        "just demo-stop",
+        "generic fake panes",
+        "does not attach to your live tmux server",
+        "Recording, GIF, MP4, and screenshot instructions live in [`docs/demo.md`](docs/demo.md)",
+        "no account, no cloud service, and no repo or worktree inspection",
         "Default key: `prefix` + `M`",
         "popup command center",
         "dock: real tmux sidebar pane",
@@ -441,13 +453,51 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
     let pages = fs::read_to_string(&pages_path)?;
     for phrase in [
         "A command center for tmux agent fleets.",
+        "og:url",
+        "https://raw.githubusercontent.com/aanari/muxboard/main/docs/social-preview.png",
+        "summary_large_image",
         "cargo install --git https://github.com/aanari/muxboard --locked",
         "muxboard-demo.svg",
-        "social-preview.svg",
+        "social-preview.png",
+        "Private demo",
+        "Safe first look",
+        "private tmux socket",
+        "No account, cloud service, or repo scan",
+        "docs/demo.md",
+        "docs/tmux-plugin.md",
         "prefix",
     ] {
         assert_contains(&pages_path, &pages, phrase)?;
     }
+    assert_not_contains(&pages_path, &pages, "https://aanari.github.io/muxboard")?;
+
+    for relative in [
+        "README.md",
+        "docs/demo.md",
+        "docs/index.html",
+        "Cargo.toml",
+        ".github/ISSUE_TEMPLATE/config.yml",
+        ".github/ISSUE_TEMPLATE/bug_report.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml",
+    ] {
+        let path = manifest_path().join(relative);
+        let source = fs::read_to_string(&path)?;
+        assert_not_contains(&path, &source, "https://aanari.github.io/muxboard")?;
+        assert_not_contains(&path, &source, "anari.io/muxboard")?;
+    }
+
+    let social_path = manifest_path().join("docs/social-preview.svg");
+    let social = fs::read_to_string(&social_path)?;
+    for phrase in [
+        "a tmux command center for AI agent fleets",
+        "1 needs you, 2 working",
+        "A tmux command center for AI agent fleets.",
+    ] {
+        assert_contains(&social_path, &social, phrase)?;
+    }
+    assert_not_contains(&social_path, &social, "3 need you")?;
+
+    assert_png_dimensions(&manifest_path().join("docs/social-preview.png"), 1200, 630)?;
 
     let security_path = manifest_path().join("SECURITY.md");
     let security = fs::read_to_string(&security_path)?;
@@ -460,13 +510,27 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
     let demo_path = manifest_path().join("docs/demo.md");
     let demo = fs::read_to_string(&demo_path)?;
     for phrase in [
+        "Private demo guide",
         "private tmux server",
-        "never records your real tmux sessions",
+        "never touches or records your",
+        "live tmux server",
+        "First look",
+        "just demo-start",
+        "just demo-attach",
         "just demo-record",
+        "just demo-stop",
+        "just demo-smoke",
+        "Export media",
+        "just demo-assets",
+        "just public-assets",
+        "just demo-mp4",
+        "brew install imagemagick",
+        "brew install asciinema agg ffmpeg",
         "Do not commit raw recordings",
     ] {
         assert_contains(&demo_path, &demo, phrase)?;
     }
+    assert_not_contains(&demo_path, &demo, "VHS")?;
 
     let script_path = manifest_path().join("scripts/demo-session");
     let script = fs::read_to_string(&script_path)?;
@@ -474,10 +538,28 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "MUXBOARD_DEMO_SOCKET",
         "muxboard-demo",
         "target/demo/muxboard.cast",
+        "target/demo/muxboard.mp4",
+        "target/demo/assets",
+        "docs/social-preview.png",
         "asciinema rec",
         "agg \"$cast\" \"$gif\"",
+        "ffmpeg -y",
+        "FONTCONFIG_FILE=\"$fonts\"",
+        "PNG32:$dest",
     ] {
         assert_contains(&script_path, &script, phrase)?;
+    }
+
+    let justfile_path = manifest_path().join("justfile");
+    let justfile = fs::read_to_string(&justfile_path)?;
+    for phrase in [
+        "demo-gif:",
+        "demo-mp4:",
+        "demo-assets:",
+        "public-assets:",
+        "demo-check:",
+    ] {
+        assert_contains(&justfile_path, &justfile, phrase)?;
     }
 
     Ok(())
@@ -955,6 +1037,7 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
     let cargo = fs::read_to_string(&cargo_path)?;
     for phrase in [
         "version = \"1.0.0\"",
+        "description = \"A tmux command center for AI agents, panes, and long-running terminal work.\"",
         "license = \"Apache-2.0\"",
         "readme = \"README.md\"",
         "repository = \"https://github.com/aanari/muxboard\"",
@@ -986,6 +1069,10 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
         "github-preflight:",
         "gh repo view \"$expected\"",
         "visibility\" = \"PUBLIC\"",
+        "homepageUrl",
+        "hasDiscussionsEnabled",
+        "repositoryTopics",
+        "homepage must stay canonical until Pages is verified",
     ] {
         assert_contains(&justfile_path, &justfile, phrase)?;
     }
@@ -1005,10 +1092,14 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
     let release_doc = fs::read_to_string(&release_doc_path)?;
     for phrase in [
         "Muxboard V1 ships GitHub-first.",
+        "just public-assets",
         "just release-check",
         "cargo package --locked --list",
+        "public docs, demo SVGs, social-preview PNG",
         "just github-preflight",
         "the GitHub repo exists, the repo is public",
+        "Keep the repository homepage pointed at GitHub unless the public Pages route has",
+        "owner-level custom",
         "gh repo create aanari/muxboard --public --source . --remote origin --push",
         "cargo install --git https://github.com/aanari/muxboard --locked",
         "git tag -a v1.0.0 -m \"muxboard 1.0.0\"",
@@ -1174,6 +1265,7 @@ fn saved_codex_goals_are_mobile_friendly_and_guarded() -> TestResult<()> {
         "just goal-list",
         "just goal-run agent-view",
         "just goal-run demo-polish",
+        "longer GitHub presentation loop",
         "just goal-send agent-view",
         "exactly one Codex tmux pane",
     ] {
@@ -1195,10 +1287,13 @@ fn saved_codex_goals_are_mobile_friendly_and_guarded() -> TestResult<()> {
     let demo_goal_path = manifest_path().join("docs/goals/demo-polish.md");
     let demo_goal = fs::read_to_string(&demo_goal_path)?;
     for phrase in [
-        "public demo and launch presentation",
-        "synthetic demo harness",
-        "Do not record or expose real pane data",
-        "under 45 seconds",
+        "GitHub documentation, demo media, and launch presentation",
+        "Continue sanding recursively",
+        "docs/social-preview.png",
+        "GIF, MP4, cast, and PNG export paths",
+        "just public-assets",
+        "never expose real pane data",
+        "change owner-level Pages or DNS settings",
         "just demo-smoke",
     ] {
         assert_contains(&demo_goal_path, &demo_goal, phrase)?;
@@ -4228,6 +4323,26 @@ fn assert_ordered(file: &Path, source: &str, needles: &[&str]) -> TestResult<()>
             .into());
         };
         cursor += offset + needle.len();
+    }
+
+    Ok(())
+}
+
+fn assert_png_dimensions(path: &Path, width: u32, height: u32) -> TestResult<()> {
+    let bytes = fs::read(path)?;
+    let signature = b"\x89PNG\r\n\x1a\n";
+    if bytes.len() < 24 || &bytes[..8] != signature {
+        return Err(format!("{} must be a PNG file", path.display()).into());
+    }
+
+    let actual_width = u32::from_be_bytes(bytes[16..20].try_into()?);
+    let actual_height = u32::from_be_bytes(bytes[20..24].try_into()?);
+    if (actual_width, actual_height) != (width, height) {
+        return Err(format!(
+            "{} must be {width}x{height}, got {actual_width}x{actual_height}",
+            path.display()
+        )
+        .into());
     }
 
     Ok(())

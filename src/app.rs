@@ -4761,7 +4761,7 @@ fn agent_bridge_report(event: &tmux::AgentBridgeEvent, status: PaneStatus) -> Op
             meaningful_summary
                 .clone()
                 .unwrap_or_else(|| String::from("input needed")),
-            String::from("respond"),
+            String::from("continue"),
         ),
         PaneStatus::Error => (
             meaningful_summary

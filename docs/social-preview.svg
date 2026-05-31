@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="muxboard, a tmux command center for AI agents">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="muxboard, a tmux command center for AI agent fleets">
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#0d1117"/>
@@ -19,7 +19,7 @@
     <rect x="92" y="74" width="1016" height="482" rx="30" fill="#101826" stroke="#2f3d57" stroke-width="2"/>
     <rect x="126" y="120" width="948" height="58" rx="16" fill="#172033"/>
     <text x="154" y="158" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">muxboard</text>
-    <text x="920" y="158" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">3 need you</text>
+    <text x="1040" y="158" text-anchor="end" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">1 needs you, 2 working</text>
     <rect x="126" y="206" width="562" height="266" rx="18" fill="#0d1320" stroke="#2f3d57"/>
     <rect x="718" y="206" width="356" height="266" rx="18" fill="#0d1320" stroke="#2f3d57"/>
     <text x="154" y="248" fill="#7aa2f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">Fleet</text>
@@ -33,5 +33,6 @@
     <rect x="126" y="496" width="948" height="34" rx="12" fill="#172033"/>
     <text x="154" y="520" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">j/k move  Enter output  g show  : send  . more  q quit</text>
   </g>
-  <text x="92" y="604" fill="url(#accent)" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="34" font-weight="700">A tmux command center for AI agent fleets.</text>
+  <rect x="92" y="572" width="700" height="48" rx="18" fill="#101826" opacity="0.92"/>
+  <text x="118" y="604" fill="#e6edf3" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="32" font-weight="700">A tmux command center for AI agent fleets.</text>
 </svg>

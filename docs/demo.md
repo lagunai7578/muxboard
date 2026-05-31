@@ -1,35 +1,47 @@
-# Demo guide
+# Private demo guide
 
-Use this when recording a GIF, asciinema cast, VHS tape, or short launch clip.
+Use this when recording a GIF, MP4, asciinema cast, or short launch clip.
 
 The safest path is the built-in synthetic demo. It creates a private tmux server
-named `muxboard-demo`, uses generic fake panes, and never records your real tmux sessions.
+named `muxboard-demo`, uses generic fake panes, and never touches or records your
+live tmux server.
+
+First look:
 
 ```bash
-just demo-smoke
-just demo-attach
-just demo-record
+just demo-start   # create fake panes
+just demo-attach  # explore muxboard
+just demo-stop    # tear it down
 ```
 
-Run `just demo-record` from a real interactive terminal. It writes
-`target/demo/muxboard.cast`. Convert that to a GIF after installing `agg`:
+For a non-recording check, run `just demo-smoke`.
+
+## Export media
+
+Render static PNG previews:
 
 ```bash
-brew install agg
+brew install imagemagick
+just demo-assets  # write target/demo/assets/*.png
+just public-assets  # refresh checked-in social-preview.png
+```
+
+Record and export a GIF or MP4 from a real interactive terminal:
+
+```bash
+brew install asciinema agg ffmpeg
+just demo-record  # write target/demo/muxboard.cast
 just demo-gif
-```
-
-Stop the private server when done:
-
-```bash
+just demo-mp4
 just demo-stop
 ```
 
 ## Story
 
-Muxboard is a tmux command center for AI agent fleets. The demo should show one idea: you can see what needs you and act without hunting through panes.
+Muxboard is a tmux command center for AI agent fleets. The demo should show one
+idea: you can see what needs you and act without hunting through panes.
 
-## Short demo flow
+## What to show
 
 1. Open muxboard with `just demo-attach` or `prefix` + `M`.
 2. Show Fleet and Details with at least one waiting agent and one working agent.

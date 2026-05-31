@@ -7,8 +7,13 @@
   <meta name="description" content="A tmux command center for AI agents, panes, and long-running terminal work.">
   <meta property="og:title" content="muxboard">
   <meta property="og:description" content="A tmux command center for AI agent fleets.">
-  <meta property="og:image" content="https://aanari.github.io/muxboard/social-preview.svg">
+  <meta property="og:url" content="https://github.com/aanari/muxboard">
+  <meta property="og:image" content="https://raw.githubusercontent.com/aanari/muxboard/main/docs/social-preview.png">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="muxboard">
+  <meta name="twitter:description" content="A tmux command center for AI agent fleets.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/aanari/muxboard/main/docs/social-preview.png">
   <style>
     :root {
       color-scheme: dark;
@@ -93,6 +98,11 @@
       border-radius: 18px;
       color: #c9d1d9;
     }
+    .note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
     section { margin: 90px 0 0; }
     h2 { margin: 0 0 18px; font-size: 32px; letter-spacing: -0.03em; }
     .grid {
@@ -135,7 +145,8 @@
       <nav aria-label="Primary">
         <a href="https://github.com/aanari/muxboard">GitHub</a>
         <a href="https://github.com/aanari/muxboard/releases/latest">Releases</a>
-        <a href="tmux-plugin.html">tmux plugin</a>
+        <a href="https://github.com/aanari/muxboard/blob/main/docs/demo.md">Demo</a>
+        <a href="https://github.com/aanari/muxboard/blob/main/docs/tmux-plugin.md">tmux plugin</a>
       </nav>
     </header>
 
@@ -147,9 +158,11 @@
           <div class="actions">
             <a class="button primary" href="https://github.com/aanari/muxboard">Get muxboard</a>
             <a class="button" href="https://github.com/aanari/muxboard/releases/latest">Download release</a>
+            <a class="button" href="https://github.com/aanari/muxboard/blob/main/docs/demo.md">Private demo</a>
           </div>
           <pre><code>cargo install --git https://github.com/aanari/muxboard --locked
 muxboard</code></pre>
+          <p class="note">Safe first look: <code>just demo-start</code>, then <code>just demo-attach</code>. It uses a private tmux socket and fake panes. No account, cloud service, or repo scan.</p>
         </div>
         <div class="terminal">
           <img src="muxboard-demo.svg" alt="Muxboard showing a fleet list and selected pane details">

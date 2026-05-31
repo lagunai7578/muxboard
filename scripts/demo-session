@@ -9,6 +9,9 @@ WORK_DIR="$ROOT/target/demo"
 AGENT_SCRIPT="$WORK_DIR/demo-agent"
 CAST_PATH="${MUXBOARD_DEMO_CAST:-$WORK_DIR/muxboard.cast}"
 GIF_PATH="${MUXBOARD_DEMO_GIF:-$WORK_DIR/muxboard.gif}"
+MP4_PATH="${MUXBOARD_DEMO_MP4:-$WORK_DIR/muxboard.mp4}"
+ASSET_DIR="${MUXBOARD_DEMO_ASSET_DIR:-$WORK_DIR/assets}"
+FONTCONFIG_DIR="$WORK_DIR/fontconfig"
 
 usage() {
     cat <<EOF
@@ -22,6 +25,9 @@ Commands:
   smoke       Start and capture the first muxboard screen.
   record      Record a scripted asciinema cast to target/demo/muxboard.cast.
   gif         Convert the cast to target/demo/muxboard.gif with agg.
+  mp4         Convert the GIF to target/demo/muxboard.mp4 with ffmpeg.
+  assets      Render static PNG previews into target/demo/assets.
+  public-assets Render checked-in public PNG assets.
   status      Show demo tmux sessions and panes.
 
 Environment:
@@ -30,6 +36,8 @@ Environment:
   MUXBOARD_DEMO_TERM      TERM used while recording, default xterm-256color.
   MUXBOARD_DEMO_CAST      asciinema output path.
   MUXBOARD_DEMO_GIF       GIF output path.
+  MUXBOARD_DEMO_MP4       MP4 output path.
+  MUXBOARD_DEMO_ASSET_DIR Static PNG output directory.
 EOF
 }
 
@@ -182,9 +190,9 @@ start_demo() {
     tmux_cmd select-pane -t "$opencode_pane" -T opencode
     tmux_cmd select-pane -t "$server_pane" -T server
 
-    set_agent_event "$codex_pane" codex waiting "approval needed" "Release demo" "blocked" "Approve command to continue" --unseen
+    set_agent_event "$codex_pane" codex waiting "approval needed" "Release demo" "" "Approve command to continue" --unseen
     set_agent_event "$claude_pane" claude running "editing renderer tests" "TUI polish" "3/5 checks" "Updating golden-grid tests"
-    set_agent_event "$opencode_pane" opencode stuck "needs human decision" "Provider parser" "waiting" "Choose retry or skip" --unseen
+    set_agent_event "$opencode_pane" opencode stuck "needs human decision" "Provider parser" "" "Choose retry or skip" --unseen
     set_agent_event "$server_pane" shell idle "health checks quiet" "Local server" "healthy" "GET /health 200"
 
     local muxboard_command
@@ -282,6 +290,74 @@ gif_demo() {
     echo "Wrote $gif"
 }
 
+mp4_demo() {
+    command -v ffmpeg >/dev/null 2>&1 || die "Install ffmpeg first, for example: brew install ffmpeg."
+    local gif="${1:-$GIF_PATH}"
+    local mp4="${2:-$MP4_PATH}"
+    if [ ! -f "$gif" ]; then
+        gif_demo "$CAST_PATH" "$gif"
+    fi
+    mkdir -p "$(dirname "$mp4")"
+    ffmpeg -y -loglevel warning -i "$gif" \
+        -movflags faststart \
+        -pix_fmt yuv420p \
+        -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" \
+        "$mp4"
+    echo "Wrote $mp4"
+}
+
+image_renderer() {
+    if command -v magick >/dev/null 2>&1; then
+        printf "%s" "magick"
+    elif command -v convert >/dev/null 2>&1; then
+        printf "%s" "convert"
+    else
+        die "Install ImageMagick first, for example: brew install imagemagick."
+    fi
+}
+
+fontconfig_file() {
+    local config="$FONTCONFIG_DIR/fonts.conf"
+    mkdir -p "$FONTCONFIG_DIR"
+    cat >"$config" <<EOF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>/System/Library/Fonts</dir>
+  <dir>/Library/Fonts</dir>
+  <dir>/usr/share/fonts</dir>
+  <dir>/usr/local/share/fonts</dir>
+  <dir prefix="xdg">fonts</dir>
+</fontconfig>
+EOF
+    printf "%s" "$config"
+}
+
+render_png() {
+    local renderer="$1"
+    local src="$2"
+    local dest="$3"
+    local fonts
+    fonts="$(fontconfig_file)"
+    mkdir -p "$(dirname "$dest")"
+    FONTCONFIG_FILE="$fonts" "$renderer" -background none "$src" -depth 8 "PNG32:$dest"
+    echo "Wrote $dest"
+}
+
+assets_demo() {
+    local out_dir="${1:-$ASSET_DIR}"
+    local renderer
+    renderer="$(image_renderer)"
+    render_png "$renderer" "$ROOT/docs/social-preview.svg" "$out_dir/social-preview.png"
+    render_png "$renderer" "$ROOT/docs/muxboard-demo.svg" "$out_dir/muxboard-demo.png"
+}
+
+public_assets_demo() {
+    local renderer
+    renderer="$(image_renderer)"
+    render_png "$renderer" "$ROOT/docs/social-preview.svg" "$ROOT/docs/social-preview.png"
+}
+
 command="${1:-}"
 case "$command" in
     start) start_demo ;;
@@ -291,6 +367,9 @@ case "$command" in
     smoke) smoke_demo ;;
     record) record_demo ;;
     gif) shift; gif_demo "$@" ;;
+    mp4) shift; mp4_demo "$@" ;;
+    assets) shift; assets_demo "$@" ;;
+    public-assets) public_assets_demo ;;
     status) status_demo ;;
     -h | --help | help) usage ;;
     *) usage; exit 2 ;;

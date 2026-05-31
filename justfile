@@ -232,13 +232,19 @@ github-preflight:
     "") echo "Missing origin remote. Expected git@github.com:aanari/muxboard.git"; exit 1 ;; \
     *) echo "Origin must point to aanari/muxboard, got: $origin"; exit 1 ;; \
   esac; \
-  repo="$(gh repo view "$expected" --json nameWithOwner,visibility,isArchived,defaultBranchRef,url --jq '[.nameWithOwner,.visibility,(.isArchived|tostring),.defaultBranchRef.name,.url] | @tsv')"; \
-  IFS=$'\t' read -r name visibility archived default_branch url <<< "$repo"; \
+  repo="$(gh repo view "$expected" --json nameWithOwner,visibility,isArchived,defaultBranchRef,url,description,homepageUrl,hasDiscussionsEnabled,repositoryTopics --jq '[.nameWithOwner,.visibility,(.isArchived|tostring),.defaultBranchRef.name,.url,.description,.homepageUrl,(.hasDiscussionsEnabled|tostring),([.repositoryTopics[].name] | sort | join(","))] | @tsv')"; \
+  IFS=$'\t' read -r name visibility archived default_branch url description homepage discussions topics <<< "$repo"; \
   test "$name" = "$expected" || { echo "Unexpected GitHub repo: $name"; exit 1; }; \
   test "$visibility" = "PUBLIC" || { echo "$expected must be public before V1 release, got: $visibility"; exit 1; }; \
   test "$archived" = "false" || { echo "$expected must not be archived"; exit 1; }; \
   test -n "$default_branch" || { echo "$expected is missing a default branch"; exit 1; }; \
-  echo "GitHub repo ok: $url default=$default_branch"
+  test "$description" = "A tmux command center for AI agents, panes, and long-running terminal work." || { echo "$expected description is stale: $description"; exit 1; }; \
+  test "$homepage" = "https://github.com/aanari/muxboard" || { echo "$expected homepage must stay canonical until Pages is verified, got: $homepage"; exit 1; }; \
+  test "$discussions" = "true" || { echo "$expected should have Discussions enabled"; exit 1; }; \
+  case ",$topics," in *,ai-agents,*) ;; *) echo "$expected topics should include ai-agents; got: $topics"; exit 1 ;; esac; \
+  case ",$topics," in *,tmux,*) ;; *) echo "$expected topics should include tmux; got: $topics"; exit 1 ;; esac; \
+  case ",$topics," in *,tui,*) ;; *) echo "$expected topics should include tui; got: $topics"; exit 1 ;; esac; \
+  echo "GitHub repo ok: $url default=$default_branch homepage=$homepage"
 
 # Create a private tmux server with synthetic panes for demos.
 demo-start:
@@ -263,6 +269,18 @@ demo-record:
 # Convert target/demo/muxboard.cast to target/demo/muxboard.gif with agg.
 demo-gif:
   scripts/demo-session gif
+
+# Convert target/demo/muxboard.gif to target/demo/muxboard.mp4 with ffmpeg.
+demo-mp4:
+  scripts/demo-session mp4
+
+# Render static demo and social-preview PNGs into target/demo/assets.
+demo-assets:
+  scripts/demo-session assets
+
+# Render checked-in public PNG assets from their SVG sources.
+public-assets:
+  scripts/demo-session public-assets
 
 # Verify the demo harness without requiring tmux.
 demo-check:

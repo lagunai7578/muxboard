@@ -9153,6 +9153,14 @@ fn explicit_tmux_agent_events_override_generic_pane_detection() {
             .any(|line| line == "Blocked: approval needed"),
         "{details:?}"
     );
+    assert!(
+        details.iter().any(|line| line == "Action: : reply"),
+        "{details:?}"
+    );
+    assert!(
+        !details.iter().any(|line| line.contains("respond")),
+        "{details:?}"
+    );
 }
 
 #[test]

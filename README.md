@@ -11,15 +11,7 @@ A tmux command center for AI agents, panes, and long-running terminal work.
 
 ![muxboard demo](docs/muxboard-demo.svg)
 
-## Why muxboard?
-
-- See every tmux pane and agent in one scan-friendly board.
-- Know which Codex, Claude Code, Opencode, or shell job needs attention.
-- Jump, reply, broadcast, save fleets, and recover without losing tmux context.
-
-Muxboard is local-first and tmux-native. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
-
-## Install
+## Try it
 
 You need `tmux` on the machine where you run `muxboard`.
 
@@ -30,7 +22,25 @@ muxboard
 
 Download release binaries for Linux and macOS from the [latest release](https://github.com/aanari/muxboard/releases/latest).
 
-For local development:
+Want a safe first look? From a checkout, run a synthetic fleet on an isolated tmux socket:
+
+```bash
+just demo-start   # create fake panes
+just demo-attach  # explore muxboard
+just demo-stop    # tear it down
+```
+
+The private demo uses generic fake panes. It does not attach to your live tmux server or record real pane output. Recording, GIF, MP4, and screenshot instructions live in [`docs/demo.md`](docs/demo.md).
+
+## Why muxboard?
+
+- See every tmux pane and agent in one scan-friendly board.
+- Know which Codex, Claude Code, Opencode, or shell job needs attention.
+- Jump, reply, broadcast, save fleets, and recover without losing tmux context.
+
+Muxboard is local-first and tmux-native: no account, no cloud service, and no repo or worktree inspection. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
+
+## Local development
 
 ```bash
 cargo install --path . --locked
