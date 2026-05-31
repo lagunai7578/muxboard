@@ -1,82 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
   <title id="title">muxboard demo</title>
-  <desc id="desc">A terminal-style preview of muxboard showing Fleet, Details, Command Center, Browse, and Output panels.</desc>
+  <desc id="desc">A compact terminal-style preview of muxboard showing Fleet, Details, Command Center, Browse, Output, and safe send review.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#111827" />
-      <stop offset="100%" stop-color="#0b1220" />
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#08111f"/>
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.35" />
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.42"/>
     </filter>
-    <style>
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-      .title { fill: #e5e7eb; font-size: 22px; font-weight: 700; }
-      .label { fill: #93c5fd; font-size: 18px; font-weight: 700; }
-      .text { fill: #d1d5db; font-size: 18px; }
-      .muted { fill: #94a3b8; font-size: 17px; }
-      .cyan { fill: #67e8f9; }
-      .green { fill: #86efac; }
-      .yellow { fill: #fde68a; }
-      .red { fill: #fca5a5; }
-      .dim { fill: #64748b; }
-    </style>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#7aa2f7" flood-opacity="0.36"/>
+    </filter>
   </defs>
-
-  <rect width="1400" height="900" fill="#0f172a" />
-  <rect x="90" y="60" width="1220" height="780" rx="18" fill="url(#bg)" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)" />
-
-  <rect x="90" y="60" width="1220" height="42" rx="18" fill="#111827" />
-  <circle cx="120" cy="81" r="7" fill="#f87171" />
-  <circle cx="145" cy="81" r="7" fill="#fbbf24" />
-  <circle cx="170" cy="81" r="7" fill="#34d399" />
-  <text fill="#94a3b8" x="700" y="87" text-anchor="middle" class="mono muted">muxboard  tmux command center</text>
-
-  <rect x="120" y="126" width="1160" height="78" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="142" y="154" class="mono label">Quick start</text>
-  <text fill="#d1d5db" x="142" y="184" class="mono text">J/K move   Enter output   G show   Space add   : send   S summary   . more   Q quit</text>
-
-  <rect x="120" y="224" width="290" height="238" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="142" y="252" class="mono label">Command Center</text>
-  <text fill="#fde68a" x="142" y="286" class="mono text">Action: A continue demo / agents</text>
-  <text fill="#fca5a5" x="142" y="317" class="mono text">Needs you: 1 waiting, 0 errors</text>
-  <text fill="#86efac" x="142" y="348" class="mono text">Working: 2 agents</text>
-  <text fill="#d1d5db" x="142" y="379" class="mono text">Send: fleet triage (2)</text>
-  <text fill="#d1d5db" x="142" y="410" class="mono text">Start: + agent in muxboard</text>
-  <text fill="#94a3b8" x="142" y="441" class="mono muted">calm fleet control, no repo context needed</text>
-
-  <rect x="430" y="224" width="850" height="238" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="452" y="252" class="mono label">Fleet | 1-3 / 7 | 1 needs you</text>
-  <text fill="#94a3b8" x="452" y="286" class="mono muted">   Where        Now         Latest</text>
-  <text fill="#fca5a5" x="452" y="320" class="mono text red">&gt;! demo/agents  needs you   network access</text>
-  <text fill="#86efac" x="452" y="352" class="mono text green"> * demo/build   working     codex: writing renderer tests</text>
-  <text fill="#67e8f9" x="452" y="384" class="mono text cyan"> + demo/review  working     opencode: reviewing fixes</text>
-  <text fill="#94a3b8" x="452" y="416" class="mono muted">Legend: &gt; selected, * active, + listed, ! alert, ~ muted.</text>
-
-  <rect x="120" y="484" width="290" height="290" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="142" y="512" class="mono label">Browse</text>
-  <text fill="#d1d5db" x="142" y="546" class="mono text">ops:</text>
-  <text fill="#67e8f9" x="142" y="578" class="mono text cyan">&gt;* agents (3 panes, h142)</text>
-  <text fill="#d1d5db" x="142" y="610" class="mono text">   build  (2 panes, h66)</text>
-  <text fill="#d1d5db" x="142" y="642" class="mono text">   review (2 panes, h51)</text>
-  <text fill="#94a3b8" x="142" y="686" class="mono muted">Enter scopes a window. Backspace returns.</text>
-
-  <rect x="430" y="484" width="410" height="290" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="452" y="512" class="mono label">Details</text>
-  <text fill="#d1d5db" x="452" y="546" class="mono text">demo/agents</text>
-  <text fill="#fde68a" x="452" y="578" class="mono text">State: Waiting | Tool: Claude Code</text>
-  <text fill="#d1d5db" x="452" y="610" class="mono text">Blocked: network access</text>
-  <text fill="#fde68a" x="452" y="642" class="mono text">Action: approve</text>
-  <text fill="#d1d5db" x="452" y="674" class="mono text">Output</text>
-  <text fill="#94a3b8" x="452" y="718" class="mono muted">Waiting for approval to reach api.example.com</text>
-
-  <rect x="860" y="484" width="420" height="290" rx="10" fill="#0b1220" stroke="#243041" />
-  <text fill="#93c5fd" x="882" y="512" class="mono label">Output</text>
-  <text fill="#d1d5db" x="882" y="546" class="mono text">demo / build</text>
-  <text fill="#d1d5db" x="882" y="584" class="mono text">Running | 3s ago</text>
-  <text fill="#86efac" x="882" y="616" class="mono text green">Summary: write renderer tests</text>
-  <text fill="#d1d5db" x="882" y="648" class="mono text">Latest: cargo test --all</text>
-
-  <rect x="120" y="792" width="1160" height="24" rx="6" fill="#111827" />
-  <text fill="#94a3b8" x="140" y="809" class="mono muted">? help  J/K move  Enter output  G show  Space add  : send  / filter  . more  Q quit</text>
+  <rect width="1200" height="720" fill="url(#page)"/>
+  <circle cx="1050" cy="88" r="170" fill="#7aa2f7" opacity="0.10"/>
+  <circle cx="80" cy="660" r="210" fill="#9ece6a" opacity="0.10"/>
+  <rect x="18" y="18" width="1164" height="684" rx="24" fill="#050814" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="18" y="18" width="1164" height="46" rx="24" fill="#0f172a"/>
+  <circle cx="46" cy="41" r="7" fill="#f87171"/>
+  <circle cx="70" cy="41" r="7" fill="#fbbf24"/>
+  <circle cx="94" cy="41" r="7" fill="#34d399"/>
+  <text x="600" y="47" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8" text-anchor="middle">muxboard  tmux command center</text>
+  <rect x="42" y="82" width="1116" height="62" rx="14" fill="#0b1220" stroke="#25324a" stroke-width="1.4"/>
+  <text x="62" y="111" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="22" font-weight="800" font-style="normal" fill="#eef2ff">Scan the fleet</text>
+  <text x="62" y="132" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#b8c7dd">Every tmux pane, agent, blocker, and latest signal in one calm board.</text>
+  <text x="910" y="119" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="16" font-weight="400" font-style="normal" fill="#fca5a5">2 need you, 1 working</text>
+  <rect x="42" y="162" width="300" height="170" rx="14" fill="#0b1220" stroke="#25324a" stroke-width="1.4"/>
+  <text x="62" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="700" font-style="normal" fill="#93c5fd">Command Center</text>
+  <text x="62" y="211" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fca5a5">Needs you: 2 waiting</text>
+  <text x="62" y="238" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#86efac">Working: 1 agent</text>
+  <text x="62" y="265" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fde68a">Action: a continue</text>
+  <text x="62" y="292" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">Send: review 2 panes</text>
+  <text x="62" y="319" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">Start: + agent</text>
+  <rect x="360" y="162" width="798" height="170" rx="14" fill="#0b1220" stroke="#7aa2f7" stroke-width="3" filter="url(#glow)"/>
+  <text x="380" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="700" font-style="normal" fill="#93c5fd">Fleet | 1-4 / 9 | 2 need you</text>
+  <text x="380" y="211" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">   Where             Now         Latest</text>
+  <text x="380" y="238" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fca5a5">&gt;! demo/agents      needs you   approval needed</text>
+  <text x="380" y="265" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#86efac"> * demo/build       working     codex: writing renderer tests</text>
+  <text x="380" y="292" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#67e8f9"> + demo/review      working     opencode: reviewing fixes</text>
+  <text x="380" y="319" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">   demo/server      quiet       health checks green</text>
+  <rect x="42" y="352" width="300" height="270" rx="14" fill="#0b1220" stroke="#25324a" stroke-width="1.4"/>
+  <text x="62" y="384" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="700" font-style="normal" fill="#93c5fd">Browse</text>
+  <text x="62" y="398" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">ops:</text>
+  <text x="62" y="425" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#67e8f9">&gt;* agents (3 panes, h142)</text>
+  <text x="62" y="452" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">   build  (2 panes, h66)</text>
+  <text x="62" y="479" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">   review (2 panes, h51)</text>
+  <text x="62" y="534" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">Enter scopes a window.</text>
+  <text x="62" y="561" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">Backspace returns.</text>
+  <rect x="360" y="352" width="388" height="270" rx="14" fill="#0b1220" stroke="#25324a" stroke-width="1.4"/>
+  <text x="380" y="384" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="700" font-style="normal" fill="#93c5fd">Details</text>
+  <text x="380" y="398" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">demo/agents</text>
+  <text x="380" y="425" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fde68a">State: Waiting | Tool: Claude Code</text>
+  <text x="380" y="452" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fca5a5">Blocked: approval needed</text>
+  <text x="380" y="479" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#fde68a">Action: a continue</text>
+  <text x="380" y="526" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">Output</text>
+  <text x="380" y="553" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">Waiting for approval to continue.</text>
+  <rect x="770" y="352" width="388" height="270" rx="14" fill="#0b1220" stroke="#25324a" stroke-width="1.4"/>
+  <text x="790" y="384" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="700" font-style="normal" fill="#93c5fd">Output</text>
+  <text x="790" y="398" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">demo/build</text>
+  <text x="790" y="425" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">Running | 3s ago</text>
+  <text x="790" y="452" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#86efac">Summary: write renderer tests</text>
+  <text x="790" y="479" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="15" font-weight="400" font-style="normal" fill="#d7dee9">Latest: cargo test --all</text>
+  <text x="790" y="526" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">No cloud. No account. No repo scan.</text>
+  <rect x="42" y="645" width="1116" height="32" rx="10" fill="#111827"/>
+  <text x="62" y="666" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="14" font-weight="400" font-style="normal" fill="#8fa1b8">? help  j/k move  Enter output  g show  Space add  : send  / filter  . more  q quit</text>
+  <metadata>muxboard-demo.svg</metadata>
 </svg>

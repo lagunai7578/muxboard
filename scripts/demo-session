@@ -340,7 +340,7 @@ render_png() {
     local fonts
     fonts="$(fontconfig_file)"
     mkdir -p "$(dirname "$dest")"
-    FONTCONFIG_FILE="$fonts" "$renderer" -background none "$src" -depth 8 "PNG32:$dest"
+    FONTCONFIG_FILE="$fonts" "$renderer" -background none "$src" -strip -depth 8 "PNG32:$dest"
     echo "Wrote $dest"
 }
 
@@ -348,6 +348,7 @@ assets_demo() {
     local out_dir="${1:-$ASSET_DIR}"
     local renderer
     renderer="$(image_renderer)"
+    "$ROOT/scripts/demo-visuals"
     render_png "$renderer" "$ROOT/docs/social-preview.svg" "$out_dir/social-preview.png"
     render_png "$renderer" "$ROOT/docs/muxboard-demo.svg" "$out_dir/muxboard-demo.png"
 }
@@ -355,6 +356,7 @@ assets_demo() {
 public_assets_demo() {
     local renderer
     renderer="$(image_renderer)"
+    "$ROOT/scripts/demo-visuals"
     render_png "$renderer" "$ROOT/docs/social-preview.svg" "$ROOT/docs/social-preview.png"
 }
 

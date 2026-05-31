@@ -9,7 +9,7 @@ A tmux command center for AI agents, panes, and long-running terminal work.
 
 `muxboard` is the calm "what needs me?" layer above your tmux sessions: scan the fleet, see which agents are stuck, jump to the right pane, reply, broadcast, or keep watching.
 
-![muxboard demo](docs/muxboard-demo.svg)
+![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](docs/muxboard-demo.gif)
 
 ## Try it
 
@@ -25,27 +25,36 @@ Download release binaries for Linux and macOS from the [latest release](https://
 Want a safe first look? From a checkout, run a synthetic fleet on an isolated tmux socket:
 
 ```bash
-just demo-start   # create fake panes
+just demo-start   # create generic fake panes
 just demo-attach  # explore muxboard
 just demo-stop    # tear it down
 ```
 
-The private demo uses generic fake panes. It does not attach to your live tmux server or record real pane output. Recording, GIF, MP4, and screenshot instructions live in [`docs/demo.md`](docs/demo.md).
+The private demo uses generic fake panes. It does not attach to your live tmux server or record real pane output.
 
 ## Why muxboard?
 
 - See every tmux pane and agent in one scan-friendly board.
 - Know which Codex, Claude Code, Opencode, or shell job needs attention.
 - Jump, reply, broadcast, save fleets, and recover without losing tmux context.
+- Stay local-first: no account, no cloud service, and no repo or worktree inspection.
 
-Muxboard is local-first and tmux-native: no account, no cloud service, and no repo or worktree inspection. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
+Muxboard is tmux-native. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
 
-## Local development
+## What you see first:
 
-```bash
-cargo install --path . --locked
-cargo run
-```
+- Fleet: every pane, agent, and long-running job in one scan-friendly list.
+- Details: the selected pane's state, blocker, action, and useful output.
+- Output: a deeper, scrollable view when you ask for more.
+- Footer: the next safe keys, always visible.
+
+Power stays one layer down until you need it:
+
+- send lists, named fleets, lane sends, and review-before-send broadcasts,
+- tmux-native agent starts in the selected pane's directory,
+- Browse for sessions and windows, Command Center for fleet triage,
+- attention sorting, search, filters, muted alerts, desktop alerts, and terminal bell alerts,
+- recent commands, macros, pane CPU/memory, and XDG-persisted state.
 
 ## tmux plugin
 
@@ -64,22 +73,7 @@ Useful presets:
 - drawer: temporary right-side overlay, closes cleanly after a jump,
 - window: persistent control room.
 
-See [`docs/tmux-plugin.md`](docs/tmux-plugin.md) for plugin settings, dock/drawer behavior, status widgets, and local-development options.
-
-## What you see first:
-
-- Fleet: every pane, agent, and long-running job in one scan-friendly list.
-- Details: the selected pane's state, blocker, action, and useful output.
-- Output: a deeper, scrollable view when you ask for more.
-- Footer: the next safe keys, always visible.
-
-Power stays one layer down until you need it:
-
-- send lists, named fleets, lane sends, and review-before-send broadcasts,
-- tmux-native agent starts in the selected pane's directory,
-- Browse for sessions and windows, Command Center for fleet triage,
-- attention sorting, search, filters, muted alerts, desktop alerts, and terminal bell alerts,
-- recent commands, macros, pane CPU/memory, and XDG-persisted state.
+See [`docs/tmux-plugin.md`](docs/tmux-plugin.md) for plugin settings, dock/drawer behavior, status widgets, and advanced options.
 
 ## Quick start
 
@@ -142,37 +136,7 @@ Common More-menu keys, after pressing `.`. Labels adapt to the current surface:
 - `h` cycle alert repeat delay,
 - `p` cycle alert types.
 
-Commands and macros support placeholders:
-
-- `{session}`
-- `{window}`
-- `{path}`
-- `{id}`
-- `{cmd}`
-- `{title}`
-- `{lane}`
-
-## SSH and local behavior
-
-Desktop notification behavior:
-
-- local GUI session: desktop notification plus terminal bell,
-- SSH session: terminal bell and in-dashboard alerts only, no GUI notification attempts.
-
-Terminal behavior:
-
-- UTF-8 terminals get the normal clean bordered UI,
-- `TERM=dumb`, non-UTF-8 locales, or `NO_COLOR` fall back to ASCII borders and plain styling.
-
-Pane CPU/memory is host-local. It shows CPU and memory for each tmux pane PID on the host where `muxboard` is running. If a pane is an `ssh` client into another machine, the values reflect that local `ssh` process, not the remote workload behind it.
-
-Structured fleet reports are host-agnostic. If an agent replies with `STATUS=... | BLOCKER=... | NEXT=...`, or emits a heartbeat like `muxboard: status=...; blocker=...; next=...`, muxboard will parse and surface that state in Fleet and Details.
-
-Muxboard also reads conservative local status hints from recent Codex and Claude Code transcripts when they map cleanly to an obvious matching tmux pane. It uses that native signal for state, thread title, and review attention, while explicit tmux bridge hooks still take priority.
-
-## Product scope
-
-V1 is intentionally tmux-first and agent-control-first. It does not inspect repos, branches, or worktrees; fleet control works the same for local panes, SSH panes, and generic long-running terminal jobs. VCS context belongs in V2 as an optional project layer, not as a dependency for the core dashboard.
+Commands and macros support placeholders: `{session}`, `{window}`, `{path}`, `{id}`, `{cmd}`, `{title}`, and `{lane}`.
 
 ## Config and state
 
@@ -180,8 +144,6 @@ Muxboard uses XDG-style paths by default:
 
 - config: `~/.config/muxboard/config.json`
 - state: `~/.local/state/muxboard/state.json`
-
-`XDG_CONFIG_HOME` and `XDG_STATE_HOME` are honored when set. Notification settings live in config, while muted alerts, recent commands, and macro slots live in state.
 
 On first run, muxboard opens a small theme picker if no theme is configured. System Colors is highlighted by default so muxboard follows your terminal palette. Use `muxboard --theme-picker` to reopen it later, or script a dotfile choice with:
 
@@ -202,11 +164,10 @@ Useful config fields:
 - `layout_preset` supports `Auto`, `Horizontal`, and `Vertical`.
 - `ui_settings.theme.preset` supports `Calm`, `Contrast`, `Mono`, `TerminalNative`, `CatppuccinLatte`, `CatppuccinMocha`, `TokyoNight`, `GruvboxDark`, `GruvboxLight`, `Nord`, and `RosePine`.
 - Kebab-case aliases like `light`, `dark`, `system`, `system-colors`, `catppuccin-mocha`, `tokyo-night`, `gruvbox`, `rose-pine`, `terminal`, `ansi`, and `no-color` also work.
-- Named themes are semantic mappings into muxboard's slots; use System Colors, stored as `TerminalNative`, to follow your terminal palette, including WezTerm, Alacritty, iTerm, and tmux themes.
+- Named themes are semantic mappings into muxboard's slots; use System Colors, stored as `TerminalNative`, to follow your terminal palette.
 - Muxboard does not read terminal config files directly.
 - The older `theme_preset` field still works for existing configs.
-
-For a small custom touch, set `ui_settings.theme.overrides`, for example `"accent": "#4078F2"`, `"warning": "#fc0"`, or `"surface": "24"`. You can also copy `config.example.json` from the repo into your XDG config path.
+- Set `ui_settings.theme.overrides` for small custom touches, for example `"accent": "#4078F2"`, `"warning": "#fc0"`, or `"surface": "24"`.
 
 To print ready-to-copy defaults:
 
@@ -215,35 +176,35 @@ muxboard --print-config-example
 muxboard --print-default-keybindings
 ```
 
-## Development
+## SSH and local behavior
 
-```bash
-just guards
-just contracts
-just test
-just test-live
-just dogfood
-just perf
-just tmux-plugin-check
-just lint
-just ci
-just ci-full
-just release-check
-```
+Desktop notification behavior:
 
-Contributor workflow lives in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-Provider drift handling lives in [`docs/provider-drift.md`](docs/provider-drift.md).
-The current test coverage map lives in [`docs/testing-matrix.md`](docs/testing-matrix.md).
-The release checklist lives in [`docs/release.md`](docs/release.md).
-Release notes live in [`CHANGELOG.md`](CHANGELOG.md).
+- local GUI session: desktop notification plus terminal bell,
+- SSH session: terminal bell and in-dashboard alerts only, no GUI notification attempts.
 
-## Probe dump
+Terminal behavior:
 
-```bash
-cargo run -- --dump-probe-json
-```
+- UTF-8 terminals get the normal clean bordered UI,
+- `TERM=dumb`, non-UTF-8 locales, or `NO_COLOR` fall back to ASCII borders and plain styling.
 
-Print the current tmux probe as JSON and exit.
+Pane CPU/memory is host-local. It shows CPU and memory for each tmux pane PID on the host where `muxboard` is running. If a pane is an `ssh` client into another machine, the values reflect that local `ssh` process, not the remote workload behind it.
+
+Structured fleet reports are host-agnostic. If an agent replies with `STATUS=... | BLOCKER=... | NEXT=...`, or emits a heartbeat like `muxboard: status=...; blocker=...; next=...`, muxboard will parse and surface that state in Fleet and Details.
+
+Muxboard also reads conservative local status hints from recent Codex and Claude Code transcripts when they map cleanly to an obvious matching tmux pane. It uses that native signal for state, thread title, and review attention, while explicit tmux bridge hooks still take priority.
+
+## Demo media
+
+The animation above is synthetic and safe to share. To record your own GIF, MP4, or asciinema cast from the same private demo harness, see [`docs/demo.md`](docs/demo.md).
+
+## Product scope
+
+V1 is intentionally tmux-first and agent-control-first. It does not inspect repos, branches, or worktrees; fleet control works the same for local panes, SSH panes, and generic long-running terminal jobs. VCS context belongs in V2 as an optional project layer, not as a dependency for the core dashboard.
+
+## Contributing
+
+Contributor workflow, verification commands, release checks, coverage, and probe/debug notes live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 

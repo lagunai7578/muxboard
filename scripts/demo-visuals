@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""Render checked-in muxboard demo visuals."""
+
+from __future__ import annotations
+
+import html
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DOCS = ROOT / "docs"
+FRAME_DIR = ROOT / "target" / "demo" / "frames"
+FONTCONFIG_DIR = ROOT / "target" / "demo" / "fontconfig"
+WIDTH = 1200
+HEIGHT = 720
+
+COLORS = {
+    "terminal": "#050814",
+    "header": "#0f172a",
+    "panel": "#0b1220",
+    "panel_2": "#111827",
+    "line": "#25324a",
+    "line_hot": "#7aa2f7",
+    "text": "#d7dee9",
+    "muted": "#8fa1b8",
+    "blue": "#93c5fd",
+    "cyan": "#67e8f9",
+    "green": "#86efac",
+    "yellow": "#fde68a",
+    "red": "#fca5a5",
+}
+
+
+def e(value: str) -> str:
+    return html.escape(value, quote=True)
+
+
+TEXT_STYLES = {
+    "text": (COLORS["text"], 15, "400"),
+    "muted": (COLORS["muted"], 14, "400"),
+    "label": (COLORS["blue"], 15, "700"),
+    "caption": ("#eef2ff", 22, "800"),
+    "smallcap": ("#b8c7dd", 15, "400"),
+    "green": (COLORS["green"], 15, "400"),
+    "yellow": (COLORS["yellow"], 15, "400"),
+    "red": (COLORS["red"], 15, "400"),
+    "cyan": (COLORS["cyan"], 15, "400"),
+}
+
+
+def text(
+    x: int,
+    y: int,
+    value: str,
+    klass: str = "text",
+    size: int | None = None,
+    anchor: str | None = None,
+) -> str:
+    fill, default_size, weight = TEXT_STYLES.get(klass, TEXT_STYLES["text"])
+    attrs = [
+        f'x="{x}"',
+        f'y="{y}"',
+        'font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace"',
+        f'font-size="{size if size is not None else default_size}"',
+        f'font-weight="{weight}"',
+        'font-style="normal"',
+        f'fill="{fill}"',
+    ]
+    if anchor is not None:
+        attrs.append(f'text-anchor="{anchor}"')
+    return f"  <text {' '.join(attrs)}>{e(value)}</text>\n"
+
+
+def panel(x: int, y: int, w: int, h: int, title: str, active: bool = False) -> str:
+    stroke = COLORS["line_hot"] if active else COLORS["line"]
+    width = 3 if active else 1.4
+    glow = ' filter="url(#glow)"' if active else ""
+    return (
+        f'  <rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" '
+        f'fill="{COLORS["panel"]}" stroke="{stroke}" stroke-width="{width}"{glow}/>'
+        "\n"
+        + text(x + 20, y + 32, title, "label")
+    )
+
+
+def frame_svg(step: str, caption: str, active: str, file_name: str) -> str:
+    active_panel = {
+        "command": active == "command",
+        "fleet": active == "fleet",
+        "browse": active == "browse",
+        "details": active == "details",
+        "output": active == "output",
+    }
+    is_send_review = active == "command"
+    fleet_line = "send list   review needed" if is_send_review else "needs you   approval needed"
+    command_action = "Action: Enter confirm" if is_send_review else "Action: a continue"
+    details_action = "Action: Enter sends after review" if is_send_review else "Action: a continue"
+    output_latest = "Review: send to 2 panes" if is_send_review else "Latest: cargo test --all"
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
+        f'viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">\n',
+        '  <title id="title">muxboard demo</title>\n',
+        '  <desc id="desc">A compact terminal-style preview of muxboard showing Fleet, Details, Command Center, Browse, Output, and safe send review.</desc>\n',
+        '  <defs>\n',
+        '    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">\n',
+        '      <stop offset="0" stop-color="#111827"/>\n',
+        '      <stop offset="1" stop-color="#08111f"/>\n',
+        '    </linearGradient>\n',
+        '    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">\n',
+        '      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.42"/>\n',
+        '    </filter>\n',
+        '    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">\n',
+        '      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#7aa2f7" flood-opacity="0.36"/>\n',
+        '    </filter>\n',
+        '  </defs>\n',
+        f'  <rect width="{WIDTH}" height="{HEIGHT}" fill="url(#page)"/>\n',
+        '  <circle cx="1050" cy="88" r="170" fill="#7aa2f7" opacity="0.10"/>\n',
+        '  <circle cx="80" cy="660" r="210" fill="#9ece6a" opacity="0.10"/>\n',
+        f'  <rect x="18" y="18" width="1164" height="684" rx="24" fill="{COLORS["terminal"]}" stroke="#1f2937" stroke-width="1.5" filter="url(#shadow)"/>\n',
+        f'  <rect x="18" y="18" width="1164" height="46" rx="24" fill="{COLORS["header"]}"/>\n',
+        '  <circle cx="46" cy="41" r="7" fill="#f87171"/>\n',
+        '  <circle cx="70" cy="41" r="7" fill="#fbbf24"/>\n',
+        '  <circle cx="94" cy="41" r="7" fill="#34d399"/>\n',
+        text(600, 47, "muxboard  tmux command center", "muted", 14, "middle"),
+        f'  <rect x="42" y="82" width="1116" height="62" rx="14" fill="{COLORS["panel"]}" stroke="{COLORS["line"]}" stroke-width="1.4"/>\n',
+        text(62, 111, step, "caption"),
+        text(62, 132, caption, "smallcap"),
+        text(910, 119, "2 need you, 1 working", "red", 16),
+        panel(42, 162, 300, 170, "Command Center", active_panel["command"]),
+        text(62, 211, "Needs you: 2 waiting", "red"),
+        text(62, 238, "Working: 1 agent", "green"),
+        text(62, 265, command_action, "yellow"),
+        text(62, 292, "Send: review 2 panes", "text"),
+        text(62, 319, "Start: + agent", "muted"),
+        panel(360, 162, 798, 170, "Fleet | 1-4 / 9 | 2 need you", active_panel["fleet"]),
+        text(380, 211, "   Where             Now         Latest", "muted"),
+        text(380, 238, f">! demo/agents      {fleet_line}", "red"),
+        text(380, 265, " * demo/build       working     codex: writing renderer tests", "green"),
+        text(380, 292, " + demo/review      working     opencode: reviewing fixes", "cyan"),
+        text(380, 319, "   demo/server      quiet       health checks green", "text"),
+        panel(42, 352, 300, 270, "Browse", active_panel["browse"]),
+        text(62, 398, "ops:", "text"),
+        text(62, 425, ">* agents (3 panes, h142)", "cyan"),
+        text(62, 452, "   build  (2 panes, h66)", "text"),
+        text(62, 479, "   review (2 panes, h51)", "text"),
+        text(62, 534, "Enter scopes a window.", "muted"),
+        text(62, 561, "Backspace returns.", "muted"),
+        panel(360, 352, 388, 270, "Details", active_panel["details"]),
+        text(380, 398, "demo/agents", "text"),
+        text(380, 425, "State: Waiting | Tool: Claude Code", "yellow"),
+        text(380, 452, "Blocked: approval needed", "red"),
+        text(380, 479, details_action, "yellow"),
+        text(380, 526, "Output", "text"),
+        text(380, 553, "Waiting for approval to continue.", "muted"),
+        panel(770, 352, 388, 270, "Output", active_panel["output"]),
+        text(790, 398, "demo/build", "text"),
+        text(790, 425, "Running | 3s ago", "text"),
+        text(790, 452, "Summary: write renderer tests", "green"),
+        text(790, 479, output_latest, "text"),
+        text(790, 526, "No cloud. No account. No repo scan.", "muted"),
+        f'  <rect x="42" y="645" width="1116" height="32" rx="10" fill="{COLORS["panel_2"]}"/>\n',
+        text(62, 666, "? help  j/k move  Enter output  g show  Space add  : send  / filter  . more  q quit", "muted", 14),
+        f'  <metadata>{e(file_name)}</metadata>\n',
+        '</svg>\n',
+    ]
+    return "".join(parts)
+
+
+def write_text(path: Path, source: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(source, encoding="utf-8")
+    print(f"Wrote {path.relative_to(ROOT)}")
+
+
+def fontconfig_env() -> dict[str, str]:
+    FONTCONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    config = FONTCONFIG_DIR / "fonts.conf"
+    config.write_text(
+        """<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>/System/Library/Fonts</dir>
+  <dir>/Library/Fonts</dir>
+  <dir>/usr/share/fonts</dir>
+  <dir>/usr/local/share/fonts</dir>
+  <dir prefix="xdg">fonts</dir>
+</fontconfig>
+""",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["FONTCONFIG_FILE"] = str(config)
+    return env
+
+
+def render_gif(frame_paths: list[Path], destination: Path) -> None:
+    magick = shutil.which("magick") or shutil.which("convert")
+    if magick is None:
+        raise SystemExit("Install ImageMagick first, for example: brew install imagemagick.")
+
+    command = [magick, "-background", "#0b1020"]
+    for frame in frame_paths:
+        command.extend(["-delay", "130", str(frame)])
+    command.extend(["-loop", "0", "-layers", "Optimize", str(destination)])
+    subprocess.run(command, check=True, cwd=ROOT, env=fontconfig_env())
+    print(f"Wrote {destination.relative_to(ROOT)}")
+
+
+def main() -> int:
+    frames = [
+        ("Scan the fleet", "Every tmux pane, agent, blocker, and latest signal in one calm board.", "fleet"),
+        ("Inspect without switching", "Enter opens useful output while muxboard keeps your place.", "output"),
+        ("Act on what needs you", "The selected pane shows the blocker and the next safe action.", "details"),
+        ("Broadcast safely", "Space marks panes, : drafts a send, Enter confirms after review.", "command"),
+    ]
+
+    FRAME_DIR.mkdir(parents=True, exist_ok=True)
+    frame_paths: list[Path] = []
+    for index, (step, caption, active) in enumerate(frames):
+        path = FRAME_DIR / f"muxboard-demo-{index + 1}.svg"
+        write_text(path, frame_svg(step, caption, active, path.name))
+        frame_paths.append(path)
+
+    write_text(
+        DOCS / "muxboard-demo.svg",
+        frame_svg(frames[0][0], frames[0][1], frames[0][2], "muxboard-demo.svg"),
+    )
+    render_gif(frame_paths, DOCS / "muxboard-demo.gif")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

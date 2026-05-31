@@ -14,7 +14,7 @@ cargo package --locked --list
 ```
 
 Review the package list for local-only files. It should include source, fixtures,
-public docs, demo SVGs, social-preview PNG, and license files. It should not
+public docs, demo SVG/GIF assets, social-preview PNG, and license files. It should not
 include `.hermes`, `target`, downloaded agent source drops, or local identity
 files.
 

@@ -260,6 +260,14 @@ fn public_demo_svg_matches_current_product_language() -> TestResult<()> {
     for phrase in required {
         assert_contains(&path, &source, phrase)?;
     }
+    for phrase in [
+        "width=\"1200\" height=\"720\"",
+        "x=\"18\" y=\"18\" width=\"1164\" height=\"684\"",
+        "Scan the fleet",
+        "Every tmux pane",
+    ] {
+        assert_contains(&path, &source, phrase)?;
+    }
     assert_not_contains_any(&path, &source, &banned)?;
     assert_not_contains(&path, &source, "<tspan")?;
 
@@ -413,8 +421,10 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "docs/index.html",
         "docs/social-preview.svg",
         "docs/social-preview.png",
+        "docs/muxboard-demo.gif",
         "docs/demo.md",
         "scripts/demo-session",
+        "scripts/demo-visuals",
         "docs/goals/demo-polish.md",
     ];
 
@@ -439,15 +449,21 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "just demo-stop",
         "generic fake panes",
         "does not attach to your live tmux server",
-        "Recording, GIF, MP4, and screenshot instructions live in [`docs/demo.md`](docs/demo.md)",
+        "![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](docs/muxboard-demo.gif)",
+        "The animation above is synthetic and safe to share",
         "no account, no cloud service, and no repo or worktree inspection",
         "Default key: `prefix` + `M`",
         "popup command center",
         "dock: real tmux sidebar pane",
         "drawer: temporary right-side overlay",
+        "Contributor workflow, verification commands, release checks, coverage, and probe/debug notes live in [`CONTRIBUTING.md`](CONTRIBUTING.md)",
     ] {
         assert_contains(&readme_path, &readme, phrase)?;
     }
+    for phrase in ["## Development", "## Local development", "## Probe dump"] {
+        assert_not_contains(&readme_path, &readme, phrase)?;
+    }
+    assert_gif_dimensions(&manifest_path().join("docs/muxboard-demo.gif"), 1200, 720)?;
 
     let pages_path = manifest_path().join("docs/index.html");
     let pages = fs::read_to_string(&pages_path)?;
@@ -457,9 +473,9 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "https://raw.githubusercontent.com/aanari/muxboard/main/docs/social-preview.png",
         "summary_large_image",
         "cargo install --git https://github.com/aanari/muxboard --locked",
-        "muxboard-demo.svg",
+        "muxboard-demo.gif",
         "social-preview.png",
-        "Private demo",
+        "Watch demo",
         "Safe first look",
         "private tmux socket",
         "No account, cloud service, or repo scan",
@@ -511,6 +527,8 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
     let demo = fs::read_to_string(&demo_path)?;
     for phrase in [
         "Private demo guide",
+        "muxboard-demo.gif",
+        "checked-in demo is synthetic",
         "private tmux server",
         "never touches or records your",
         "live tmux server",
@@ -523,6 +541,7 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "Export media",
         "just demo-assets",
         "just public-assets",
+        "refresh docs/muxboard-demo.gif",
         "just demo-mp4",
         "brew install imagemagick",
         "brew install asciinema agg ffmpeg",
@@ -541,6 +560,7 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "target/demo/muxboard.mp4",
         "target/demo/assets",
         "docs/social-preview.png",
+        "scripts/demo-visuals",
         "asciinema rec",
         "agg \"$cast\" \"$gif\"",
         "ffmpeg -y",
@@ -558,6 +578,7 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "demo-assets:",
         "public-assets:",
         "demo-check:",
+        "python3 -m py_compile scripts/demo-visuals",
     ] {
         assert_contains(&justfile_path, &justfile, phrase)?;
     }
@@ -1079,14 +1100,18 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
 
     let readme_path = manifest_path().join("README.md");
     let readme = fs::read_to_string(&readme_path)?;
-    assert_contains(&readme_path, &readme, "just release-check")?;
     assert_contains(
         &readme_path,
         &readme,
         "cargo install --git https://github.com/aanari/muxboard --locked",
     )?;
-    assert_contains(&readme_path, &readme, "docs/release.md")?;
     assert_contains(&readme_path, &readme, "Licensed under Apache-2.0")?;
+    assert_not_contains(&readme_path, &readme, "just release-check")?;
+
+    let contributing_path = manifest_path().join("CONTRIBUTING.md");
+    let contributing = fs::read_to_string(&contributing_path)?;
+    assert_contains(&contributing_path, &contributing, "just release-check")?;
+    assert_contains(&contributing_path, &contributing, "docs/release.md")?;
 
     let release_doc_path = manifest_path().join("docs/release.md");
     let release_doc = fs::read_to_string(&release_doc_path)?;
@@ -1095,7 +1120,7 @@ fn release_gate_stays_comprehensive_and_v1_identified() -> TestResult<()> {
         "just public-assets",
         "just release-check",
         "cargo package --locked --list",
-        "public docs, demo SVGs, social-preview PNG",
+        "public docs, demo SVG/GIF assets, social-preview PNG",
         "just github-preflight",
         "the GitHub repo exists, the repo is public",
         "Keep the repository homepage pointed at GitHub unless the public Pages route has",
@@ -4337,6 +4362,25 @@ fn assert_png_dimensions(path: &Path, width: u32, height: u32) -> TestResult<()>
 
     let actual_width = u32::from_be_bytes(bytes[16..20].try_into()?);
     let actual_height = u32::from_be_bytes(bytes[20..24].try_into()?);
+    if (actual_width, actual_height) != (width, height) {
+        return Err(format!(
+            "{} must be {width}x{height}, got {actual_width}x{actual_height}",
+            path.display()
+        )
+        .into());
+    }
+
+    Ok(())
+}
+
+fn assert_gif_dimensions(path: &Path, width: u16, height: u16) -> TestResult<()> {
+    let bytes = fs::read(path)?;
+    if bytes.len() < 10 || (&bytes[..6] != b"GIF87a" && &bytes[..6] != b"GIF89a") {
+        return Err(format!("{} must be a GIF file", path.display()).into());
+    }
+
+    let actual_width = u16::from_le_bytes(bytes[6..8].try_into()?);
+    let actual_height = u16::from_le_bytes(bytes[8..10].try_into()?);
     if (actual_width, actual_height) != (width, height) {
         return Err(format!(
             "{} must be {width}x{height}, got {actual_width}x{actual_height}",

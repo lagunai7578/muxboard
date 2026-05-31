@@ -1,6 +1,10 @@
 # Private demo guide
 
-Use this when recording a GIF, MP4, asciinema cast, or short launch clip.
+![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](muxboard-demo.gif)
+
+The checked-in demo is synthetic. It shows the core loop: scan the fleet, inspect output, act on a waiting agent, and review a multi-pane send.
+
+Use this guide when recording a GIF, MP4, asciinema cast, or short launch clip.
 
 The safest path is the built-in synthetic demo. It creates a private tmux server
 named `muxboard-demo`, uses generic fake panes, and never touches or records your
@@ -18,12 +22,12 @@ For a non-recording check, run `just demo-smoke`.
 
 ## Export media
 
-Render static PNG previews:
+Render checked-in public visuals and static PNG previews:
 
 ```bash
 brew install imagemagick
-just demo-assets  # write target/demo/assets/*.png
-just public-assets  # refresh checked-in social-preview.png
+just public-assets  # refresh docs/muxboard-demo.gif and docs/social-preview.png
+just demo-assets    # write target/demo/assets/*.png
 ```
 
 Record and export a GIF or MP4 from a real interactive terminal:

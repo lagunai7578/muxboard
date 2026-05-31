@@ -81,6 +81,20 @@ Coverage is not a UX score. Use it to find unexercised files, branches, and erro
 - For real interaction changes, prefer a small live test in `tests/live_e2e.rs`.
 - Contributions are accepted under the Apache-2.0 license used by this repository.
 
+## Local install and debugging
+
+Install the current checkout when you need to test the binary outside `cargo run`:
+
+```bash
+cargo install --path . --locked
+```
+
+Print the current tmux probe as JSON and exit:
+
+```bash
+cargo run -- --dump-probe-json
+```
+
 ## Useful commands
 
 ```bash

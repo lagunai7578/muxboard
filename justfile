@@ -286,6 +286,8 @@ public-assets:
 demo-check:
   bash -n scripts/demo-session
   test -x scripts/demo-session
+  test -x scripts/demo-visuals
+  python3 -m py_compile scripts/demo-visuals
 
 # Run the standard CI checks locally.
 ci: fmt-check lint guards contracts test perf-smoke tmux-plugin-check goal-check demo-check
