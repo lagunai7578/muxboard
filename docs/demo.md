@@ -1,6 +1,29 @@
 # Demo guide
 
-Use this when recording a GIF, asciinema, VHS tape, or short launch clip.
+Use this when recording a GIF, asciinema cast, VHS tape, or short launch clip.
+
+The safest path is the built-in synthetic demo. It creates a private tmux server
+named `muxboard-demo`, uses generic fake panes, and never records your real tmux sessions.
+
+```bash
+just demo-smoke
+just demo-attach
+just demo-record
+```
+
+Run `just demo-record` from a real interactive terminal. It writes
+`target/demo/muxboard.cast`. Convert that to a GIF after installing `agg`:
+
+```bash
+brew install agg
+just demo-gif
+```
+
+Stop the private server when done:
+
+```bash
+just demo-stop
+```
 
 ## Story
 
@@ -8,7 +31,7 @@ Muxboard is a tmux command center for AI agent fleets. The demo should show one 
 
 ## Short demo flow
 
-1. Open muxboard with `prefix` + `M`.
+1. Open muxboard with `just demo-attach` or `prefix` + `M`.
 2. Show Fleet and Details with at least one waiting agent and one working agent.
 3. Press `Enter` to open Output, then `Esc` to return.
 4. Press `a` to continue a waiting pane.
@@ -23,6 +46,8 @@ Muxboard is a tmux command center for AI agent fleets. The demo should show one 
 - Keep pane names generic: `codex`, `claude`, `server`, `tests`.
 - Do not include private repo names, local paths, tokens, chat transcripts, or real customer data.
 - Keep the final clip under 45 seconds.
+- Prefer `.cast` as the source artifact and GIF/WebM/MP4 for sharing.
+- Do not commit raw recordings until they have been reviewed.
 
 ## One-line positioning
 

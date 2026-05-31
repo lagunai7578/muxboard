@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOCKET="${MUXBOARD_DEMO_SOCKET:-muxboard-demo}"
+AGENT_SESSION="${MUXBOARD_DEMO_AGENT_SESSION:-agents}"
+UI_SESSION="${MUXBOARD_DEMO_UI_SESSION:-muxboard}"
+WORK_DIR="$ROOT/target/demo"
+AGENT_SCRIPT="$WORK_DIR/demo-agent"
+CAST_PATH="${MUXBOARD_DEMO_CAST:-$WORK_DIR/muxboard.cast}"
+GIF_PATH="${MUXBOARD_DEMO_GIF:-$WORK_DIR/muxboard.gif}"
+
+usage() {
+    cat <<EOF
+Usage: scripts/demo-session <command>
+
+Commands:
+  start       Create a private tmux demo server and launch muxboard.
+  attach      Attach to the muxboard demo UI.
+  stop        Stop the private demo server.
+  restart     Stop, then start the demo server.
+  smoke       Start and capture the first muxboard screen.
+  record      Record a scripted asciinema cast to target/demo/muxboard.cast.
+  gif         Convert the cast to target/demo/muxboard.gif with agg.
+  status      Show demo tmux sessions and panes.
+
+Environment:
+  MUXBOARD_DEMO_COMMAND   Command used for the UI, default target/debug/muxboard.
+  MUXBOARD_DEMO_SOCKET    tmux socket name, default muxboard-demo.
+  MUXBOARD_DEMO_TERM      TERM used while recording, default xterm-256color.
+  MUXBOARD_DEMO_CAST      asciinema output path.
+  MUXBOARD_DEMO_GIF       GIF output path.
+EOF
+}
+
+die() {
+    echo "demo-session: $*" >&2
+    exit 1
+}
+
+q() {
+    printf "%q" "$1"
+}
+
+tmux_cmd() {
+    tmux -f /dev/null -L "$SOCKET" "$@"
+}
+
+require_tmux() {
+    command -v tmux >/dev/null 2>&1 || die "tmux is required."
+}
+
+ensure_binary() {
+    if [ -n "${MUXBOARD_DEMO_COMMAND:-}" ]; then
+        return
+    fi
+
+    cargo build --quiet --manifest-path "$ROOT/Cargo.toml"
+}
+
+muxboard_binary() {
+    if [ -n "${MUXBOARD_DEMO_COMMAND:-}" ]; then
+        printf "%s" "$MUXBOARD_DEMO_COMMAND"
+    else
+        printf "%q" "$ROOT/target/debug/muxboard"
+    fi
+}
+
+write_agent_script() {
+    mkdir -p "$WORK_DIR"
+    cat >"$AGENT_SCRIPT" <<'AGENT'
+#!/usr/bin/env bash
+set -euo pipefail
+
+name="${1:-agent}"
+mode="${2:-running}"
+summary="${3:-working}"
+
+printf '\033]2;%s\a' "$name"
+printf '%s\n' "muxboard demo: $name"
+printf '%s\n' "This is synthetic demo output. No private data is used."
+
+case "$mode" in
+    waiting)
+        printf '%s\n' "STATUS=waiting | BLOCKER=approval needed | NEXT=press Enter to continue"
+        printf '%s\n' "Proposed command: cargo test --all-targets"
+        printf '%s\n' "Press Enter or type command to continue"
+        while IFS= read -r reply; do
+            if [ -n "$reply" ]; then
+                printf '%s\n' "operator: $reply"
+            else
+                printf '%s\n' "operator: continue"
+            fi
+            printf '%s\n' "STATUS=running | BLOCKER=none | NEXT=running checks"
+            sleep 1
+            printf '%s\n' "STATUS=done | BLOCKER=none | NEXT=review results"
+            printf '%s\n' "Checks passed. Waiting for the next instruction."
+        done
+        ;;
+    running)
+        tick=1
+        while true; do
+            printf 'STATUS=running | BLOCKER=none | NEXT=%s\n' "$summary"
+            printf '[%02d] thinking, editing, testing...\n' "$tick"
+            tick=$((tick + 1))
+            sleep 4
+        done
+        ;;
+    stuck)
+        printf '%s\n' "STATUS=stuck | BLOCKER=needs human decision | NEXT=choose retry or skip"
+        printf '%s\n' "I found two safe paths and need a call."
+        while true; do sleep 30; done
+        ;;
+    server)
+        tick=1
+        while true; do
+            printf '[%02d] server: GET /health 200, queue=0\n' "$tick"
+            tick=$((tick + 1))
+            sleep 5
+        done
+        ;;
+    *)
+        printf '%s\n' "STATUS=idle | BLOCKER=none | NEXT=waiting"
+        while true; do sleep 30; done
+        ;;
+esac
+AGENT
+    chmod +x "$AGENT_SCRIPT"
+}
+
+stop_demo() {
+    require_tmux
+    tmux_cmd kill-server >/dev/null 2>&1 || true
+}
+
+pane_id() {
+    tmux_cmd display-message -p -t "$1" "#{pane_id}"
+}
+
+set_agent_event() {
+    local pane="$1"
+    local agent="$2"
+    local state="$3"
+    local summary="$4"
+    local thread="$5"
+    local progress="$6"
+    local log_line="$7"
+    shift 7
+
+    "$ROOT/target/debug/muxboard" \
+        --socket "$SOCKET" \
+        agent-event \
+        --pane "$pane" \
+        --agent "$agent" \
+        --state "$state" \
+        --summary "$summary" \
+        --thread-name "$thread" \
+        --progress "$progress" \
+        --log "$log_line" \
+        "$@" >/dev/null
+}
+
+start_demo() {
+    require_tmux
+    ensure_binary
+    write_agent_script
+    stop_demo
+
+    tmux_cmd new-session -d -s "$AGENT_SESSION" -n codex -x 120 -y 36 "$AGENT_SCRIPT codex waiting"
+    tmux_cmd new-window -d -t "$AGENT_SESSION" -n claude "$AGENT_SCRIPT claude running 'editing renderer tests'"
+    tmux_cmd new-window -d -t "$AGENT_SESSION" -n opencode "$AGENT_SCRIPT opencode stuck"
+    tmux_cmd new-window -d -t "$AGENT_SESSION" -n server "$AGENT_SCRIPT server server"
+
+    local codex_pane claude_pane opencode_pane server_pane
+    codex_pane="$(pane_id "$AGENT_SESSION:codex.0")"
+    claude_pane="$(pane_id "$AGENT_SESSION:claude.0")"
+    opencode_pane="$(pane_id "$AGENT_SESSION:opencode.0")"
+    server_pane="$(pane_id "$AGENT_SESSION:server.0")"
+
+    tmux_cmd select-pane -t "$codex_pane" -T codex
+    tmux_cmd select-pane -t "$claude_pane" -T claude
+    tmux_cmd select-pane -t "$opencode_pane" -T opencode
+    tmux_cmd select-pane -t "$server_pane" -T server
+
+    set_agent_event "$codex_pane" codex waiting "approval needed" "Release demo" "blocked" "Approve command to continue" --unseen
+    set_agent_event "$claude_pane" claude running "editing renderer tests" "TUI polish" "3/5 checks" "Updating golden-grid tests"
+    set_agent_event "$opencode_pane" opencode stuck "needs human decision" "Provider parser" "waiting" "Choose retry or skip" --unseen
+    set_agent_event "$server_pane" shell idle "health checks quiet" "Local server" "healthy" "GET /health 200"
+
+    local muxboard_command
+    muxboard_command="$(muxboard_binary)"
+    tmux_cmd new-session -d -s "$UI_SESSION" -n board -x 120 -y 36 \
+        "cd $(q "$ROOT") && exec $muxboard_command --socket $(q "$SOCKET") --session $(q "$AGENT_SESSION")"
+
+    echo "Started private demo server: tmux -f /dev/null -L $SOCKET attach -t $UI_SESSION"
+}
+
+attach_demo() {
+    require_tmux
+    tmux_cmd has-session -t "$UI_SESSION" 2>/dev/null || start_demo
+    tmux_cmd attach-session -t "$UI_SESSION"
+}
+
+status_demo() {
+    require_tmux
+    tmux_cmd list-sessions
+    tmux_cmd list-panes -a -F '#{session_name}:#{window_name}.#{pane_index} #{pane_id} #{pane_title} #{pane_current_command}'
+}
+
+smoke_demo() {
+    start_demo
+    sleep 3
+    tmux_cmd capture-pane -p -S -34 -t "$UI_SESSION:board"
+}
+
+send_demo_key() {
+    tmux_cmd send-keys -t "$UI_SESSION:board" "$1"
+}
+
+send_demo_text() {
+    tmux_cmd send-keys -t "$UI_SESSION:board" -l -- "$1"
+}
+
+drive_recording() {
+    sleep 3
+    send_demo_key Down
+    sleep 1
+    send_demo_key Enter
+    sleep 2
+    send_demo_key Escape
+    sleep 1
+    send_demo_key Up
+    sleep 1
+    send_demo_key a
+    sleep 2
+    send_demo_key Space
+    sleep 1
+    send_demo_key Down
+    sleep 1
+    send_demo_key Space
+    sleep 1
+    send_demo_text ":"
+    sleep 0.5
+    send_demo_text "STATUS=running | BLOCKER=none | NEXT=ship demo"
+    sleep 1
+    send_demo_key Enter
+    sleep 2
+    send_demo_key Enter
+    sleep 1
+    send_demo_key g
+    sleep 3
+    tmux_cmd detach-client -s "$UI_SESSION" >/dev/null 2>&1 || true
+    tmux_cmd detach-client -s "$AGENT_SESSION" >/dev/null 2>&1 || true
+}
+
+record_demo() {
+    command -v asciinema >/dev/null 2>&1 || die "Install asciinema first."
+    if [ ! -t 0 ] || [ ! -t 1 ]; then
+        die "recording needs an interactive terminal; run just demo-record from a real terminal."
+    fi
+    start_demo
+    mkdir -p "$(dirname "$CAST_PATH")"
+    local record_term="${MUXBOARD_DEMO_TERM:-xterm-256color}"
+    drive_recording &
+    TERM="$record_term" asciinema rec \
+        --overwrite \
+        --idle-time-limit 1 \
+        --window-size 120x36 \
+        --title "muxboard demo" \
+        --command "env TERM=$(q "$record_term") tmux -f /dev/null -L $(q "$SOCKET") attach-session -t $(q "$UI_SESSION")" \
+        "$CAST_PATH"
+    echo "Recorded $CAST_PATH"
+}
+
+gif_demo() {
+    command -v agg >/dev/null 2>&1 || die "Install agg first, for example: brew install agg."
+    local cast="${1:-$CAST_PATH}"
+    local gif="${2:-$GIF_PATH}"
+    test -f "$cast" || die "missing cast: $cast"
+    mkdir -p "$(dirname "$gif")"
+    agg "$cast" "$gif"
+    echo "Wrote $gif"
+}
+
+command="${1:-}"
+case "$command" in
+    start) start_demo ;;
+    attach) attach_demo ;;
+    stop) stop_demo ;;
+    restart) stop_demo; start_demo ;;
+    smoke) smoke_demo ;;
+    record) record_demo ;;
+    gif) shift; gif_demo "$@" ;;
+    status) status_demo ;;
+    -h | --help | help) usage ;;
+    *) usage; exit 2 ;;
+esac

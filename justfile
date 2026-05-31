@@ -240,11 +240,40 @@ github-preflight:
   test -n "$default_branch" || { echo "$expected is missing a default branch"; exit 1; }; \
   echo "GitHub repo ok: $url default=$default_branch"
 
+# Create a private tmux server with synthetic panes for demos.
+demo-start:
+  scripts/demo-session start
+
+# Attach to the synthetic muxboard demo UI.
+demo-attach:
+  scripts/demo-session attach
+
+# Stop the private demo server.
+demo-stop:
+  scripts/demo-session stop
+
+# Smoke-test the synthetic demo without recording.
+demo-smoke:
+  scripts/demo-session smoke
+
+# Record a scripted asciinema demo into target/demo/muxboard.cast.
+demo-record:
+  scripts/demo-session record
+
+# Convert target/demo/muxboard.cast to target/demo/muxboard.gif with agg.
+demo-gif:
+  scripts/demo-session gif
+
+# Verify the demo harness without requiring tmux.
+demo-check:
+  bash -n scripts/demo-session
+  test -x scripts/demo-session
+
 # Run the standard CI checks locally.
-ci: fmt-check lint guards contracts test perf-smoke tmux-plugin-check goal-check
+ci: fmt-check lint guards contracts test perf-smoke tmux-plugin-check goal-check demo-check
 
 # Run the full local verification stack, including live tmux tests.
-ci-full: fmt-check lint guards contracts test perf-smoke test-live tmux-plugin-check goal-check
+ci-full: fmt-check lint guards contracts test perf-smoke test-live tmux-plugin-check goal-check demo-check
 
 # Run the V1 release confidence gate.
 release-check: ci-full ux coverage-full-gate package-check dogfood
@@ -299,6 +328,7 @@ goal-check:
   test -f docs/goals/README.md
   test -f docs/goals/agent-view.md
   test -f docs/goals/competitive-hardening.md
+  test -f docs/goals/demo-polish.md
 
 # Run one bounded Codex improvement pass. Review the diff before running again.
 codex-autopass:

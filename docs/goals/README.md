@@ -7,10 +7,12 @@ just goal-list
 just goal-show agent-view
 just goal-run agent-view
 just goal-run competitive-hardening
+just goal-run demo-polish
 ```
 
 `just goal-run agent-view` is the easiest phone path: it runs a bounded Codex pass from the saved goal without using the interactive `/goal` UI.
 `just goal-run competitive-hardening` is the longer product/QA loop for comparing muxboard against adjacent tmux agent tools and implementing one high-leverage V1-safe gap.
+`just goal-run demo-polish` hardens the public demo flow, recording harness, and launch presentation.
 
 If an interactive Codex pane is already open and you want to set its `/goal`, use:
 

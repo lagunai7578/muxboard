@@ -412,6 +412,8 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         "docs/index.html",
         "docs/social-preview.svg",
         "docs/demo.md",
+        "scripts/demo-session",
+        "docs/goals/demo-polish.md",
     ];
 
     for relative in required_files {
@@ -454,6 +456,29 @@ fn public_project_surface_stays_release_ready() -> TestResult<()> {
         &security,
         "https://github.com/aanari/muxboard/security/advisories/new",
     )?;
+
+    let demo_path = manifest_path().join("docs/demo.md");
+    let demo = fs::read_to_string(&demo_path)?;
+    for phrase in [
+        "private tmux server",
+        "never records your real tmux sessions",
+        "just demo-record",
+        "Do not commit raw recordings",
+    ] {
+        assert_contains(&demo_path, &demo, phrase)?;
+    }
+
+    let script_path = manifest_path().join("scripts/demo-session");
+    let script = fs::read_to_string(&script_path)?;
+    for phrase in [
+        "MUXBOARD_DEMO_SOCKET",
+        "muxboard-demo",
+        "target/demo/muxboard.cast",
+        "asciinema rec",
+        "agg \"$cast\" \"$gif\"",
+    ] {
+        assert_contains(&script_path, &script, phrase)?;
+    }
 
     Ok(())
 }
@@ -1104,8 +1129,8 @@ fn saved_codex_goals_are_mobile_friendly_and_guarded() -> TestResult<()> {
     }
 
     for phrase in [
-        "ci: fmt-check lint guards contracts test perf-smoke tmux-plugin-check goal-check",
-        "ci-full: fmt-check lint guards contracts test perf-smoke test-live tmux-plugin-check goal-check",
+        "ci: fmt-check lint guards contracts test perf-smoke tmux-plugin-check goal-check demo-check",
+        "ci-full: fmt-check lint guards contracts test perf-smoke test-live tmux-plugin-check goal-check demo-check",
     ] {
         assert_contains(&justfile_path, &justfile, phrase)?;
     }
@@ -1148,6 +1173,7 @@ fn saved_codex_goals_are_mobile_friendly_and_guarded() -> TestResult<()> {
         "Saved goals keep mobile SSH work short",
         "just goal-list",
         "just goal-run agent-view",
+        "just goal-run demo-polish",
         "just goal-send agent-view",
         "exactly one Codex tmux pane",
     ] {
@@ -1164,6 +1190,18 @@ fn saved_codex_goals_are_mobile_friendly_and_guarded() -> TestResult<()> {
         "Keep muxboard cross-agent and tmux-native",
     ] {
         assert_contains(&goal_path, &goal, phrase)?;
+    }
+
+    let demo_goal_path = manifest_path().join("docs/goals/demo-polish.md");
+    let demo_goal = fs::read_to_string(&demo_goal_path)?;
+    for phrase in [
+        "public demo and launch presentation",
+        "synthetic demo harness",
+        "Do not record or expose real pane data",
+        "under 45 seconds",
+        "just demo-smoke",
+    ] {
+        assert_contains(&demo_goal_path, &demo_goal, phrase)?;
     }
 
     Ok(())
